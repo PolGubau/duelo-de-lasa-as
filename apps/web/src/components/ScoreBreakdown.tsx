@@ -1,5 +1,6 @@
 import type { PlayerScore, PlayerState } from "@lasana/engine";
 import { motion } from "framer-motion";
+import { formatScore } from "../lib/layers.ts";
 import { Avatar } from "./Avatar.tsx";
 
 interface ScoreBreakdownProps {
@@ -29,7 +30,7 @@ export function ScoreBreakdown({ player, score, revealed }: ScoreBreakdownProps)
           transition={{ type: "spring", stiffness: 380, damping: 18 }}
           className="font-display text-lg text-brand-cheese"
         >
-          {total}
+          {formatScore(total)}
         </motion.span>
       </div>
       <div className="flex flex-col gap-0.5 text-[11px] text-brand-bechamel/70">
@@ -37,7 +38,7 @@ export function ScoreBreakdown({ player, score, revealed }: ScoreBreakdownProps)
           <div key={i} className="flex justify-between gap-2">
             <span className="truncate">{step.label}</span>
             <span className="shrink-0">
-              {step.before} {step.op === "add" ? "+" : "×"} {step.value} = {step.after}
+              {formatScore(step.before)} {step.op === "add" ? "+" : "×"} {step.value} = {formatScore(step.after)}
             </span>
           </div>
         ))}
@@ -45,8 +46,8 @@ export function ScoreBreakdown({ player, score, revealed }: ScoreBreakdownProps)
           <div className="flex justify-between gap-2 text-brand-cheese">
             <span className="truncate">{score.chefStep.label} (chef)</span>
             <span className="shrink-0">
-              {score.chefStep.before} {score.chefStep.op === "add" ? "+" : "×"}{" "}
-              {score.chefStep.value} = {score.chefStep.after}
+              {formatScore(score.chefStep.before)} {score.chefStep.op === "add" ? "+" : "×"}{" "}
+              {score.chefStep.value} = {formatScore(score.chefStep.after)}
             </span>
           </div>
         )}

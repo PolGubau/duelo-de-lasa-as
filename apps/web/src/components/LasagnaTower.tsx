@@ -1,6 +1,7 @@
 import type { LayerEvent } from "@lasana/engine";
 import { motion } from "framer-motion";
 import { cn } from "../lib/cn.ts";
+import { formatScore } from "../lib/layers.ts";
 
 interface LasagnaTowerProps {
   layers: LayerEvent[];
@@ -41,7 +42,7 @@ export function LasagnaTower({ layers, total, compact, hidden }: LasagnaTowerPro
 
   return (
     <div className="flex w-full flex-col items-center gap-1">
-      <div className="font-display text-lg text-brand-cheese">{total}</div>
+      <div className="font-display text-lg text-brand-cheese">{formatScore(total)}</div>
       <div
         className={cn(
           "flex w-full flex-col-reverse gap-0.5 overflow-y-auto",

@@ -2,7 +2,7 @@ import type { PlayerState } from "@lasana/engine";
 import { getChef } from "@lasana/engine";
 import { motion } from "framer-motion";
 import { cn } from "../lib/cn.ts";
-import { runningTotal } from "../lib/layers.ts";
+import { formatScore, runningTotal } from "../lib/layers.ts";
 import { playSound, vibrate } from "../lib/sound.ts";
 import { Avatar } from "./Avatar.tsx";
 import { LasagnaStack3D } from "./LasagnaStack3D.tsx";
@@ -83,7 +83,7 @@ export function TableStage({
             )}
             <LasagnaStack3D layers={player.lasagna} hidden={secret} slabHeight={8} width={78} />
             <span className="font-display text-xs text-brand-cheese">
-              {secret ? "?" : runningTotal(player.lasagna)}
+              {secret ? "?" : formatScore(runningTotal(player.lasagna))}
             </span>
           </motion.button>
         );
@@ -97,7 +97,7 @@ export function TableStage({
           transition={{ type: "spring", stiffness: 420, damping: 18 }}
           className="font-display text-3xl text-outline"
         >
-          {runningTotal(center.lasagna)}
+          {formatScore(runningTotal(center.lasagna))}
         </motion.span>
         <div className="flex max-h-[42vh] items-end overflow-hidden">
           <LasagnaStack3D layers={center.lasagna} slabHeight={16} width={150} />
