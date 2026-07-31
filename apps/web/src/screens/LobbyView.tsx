@@ -37,6 +37,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
   const chat = useGameStore((s) => s.chat);
   const [copied, setCopied] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"table" | "rules">("table");
   const me = room.players.find((player) => player.id === sessionId);
   const isHost = room.hostId === sessionId;
   const canStart = isHost && room.players.length >= 2 && room.players.every((player) => player.ready);
@@ -66,14 +67,14 @@ export function LobbyView({ onExit }: LobbyViewProps) {
           </button>
         </header>
 
-        <main className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
+        <main className="lobby-layout grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
           <section className="flex flex-col gap-4">
             <div className="lobby-room-card">
               <h1 className="font-display text-xl text-brand-bechamel sm:text-3xl">Código de sala</h1>
               <div className="lobby-code-tile mt-4">
                 <span>{room.code}</span>
               </div>
-              <p className="mt-3 text-center text-pretty text-xs text-brand-bechamel/60">Comparte el código o invita directamente a tus rivales.</p>
+              <p className="mt-3 text-center text-pretty text-xs text-brand-bechamel/60">Comparte el código a tus rivales.</p>
               <div className="mt-4 flex justify-center gap-2">
                 <Button size="sm" variant="ghost" onClick={copyInvite}>
                   <Clipboard size={15} className="mr-1.5 inline" /> {copied ? "¡Copiado!" : "Copiar enlace"}
@@ -84,7 +85,30 @@ export function LobbyView({ onExit }: LobbyViewProps) {
               </div>
             </div>
 
-            <section className="lobby-panel">
+            {isHost && (
+              <div className="lobby-mobile-tabs" role="tablist" aria-label="Secciones de la sala">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileTab === "table"}
+                  className={mobileTab === "table" ? "is-active" : ""}
+                  onClick={() => setMobileTab("table")}
+                >
+                  Sala
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileTab === "rules"}
+                  className={mobileTab === "rules" ? "is-active" : ""}
+                  onClick={() => setMobileTab("rules")}
+                >
+                  Reglas
+                </button>
+              </div>
+            )}
+
+            <section className="lobby-panel lobby-tab-content" data-tab="table" data-active={mobileTab === "table"}>
               <div className="lobby-section-heading mb-3">
                 <div>
                   <h2 className="lobby-panel-title">En la mesa</h2>
@@ -112,27 +136,29 @@ export function LobbyView({ onExit }: LobbyViewProps) {
             </section>
           </section>
 
-          <aside className="flex flex-col gap-4">
-            <section className="lobby-panel">
+          <aside className="lobby-secondary flex flex-col gap-4">
+            <section className="lobby-panel lobby-tab-content" data-tab="rules" data-active={isHost && mobileTab === "rules"}>
               <h2 className="lobby-panel-title"><Shield size={18} /> Reglas de la mesa</h2>
               <p className="mt-2 text-pretty text-xs leading-relaxed text-brand-bechamel/65">
                 {room.options.visibility === "secret" ? "Lasaña oculta: las capas rivales se revelan al puntuar." : "Lasaña visible: todos ven las capas de todos."}
               </p>
-              <div className="lobby-rule-choices mt-3 grid grid-cols-2 gap-2">
-                <Button size="sm" className="lobby-rule-button" variant={room.options.visibility === "public" ? "secondary" : "ghost"} disabled={!isHost} aria-pressed={room.options.visibility === "public"} onClick={() => setVisibility("public")}>
-                  <Eye size={14} className="mr-1 inline" /> Para todos
-                </Button>
-                <Button size="sm" className="lobby-rule-button" variant={room.options.visibility === "secret" ? "secondary" : "ghost"} disabled={!isHost} aria-pressed={room.options.visibility === "secret"} onClick={() => setVisibility("secret")}>
-                  <EyeOff size={14} className="mr-1 inline" /> Oculto
-                </Button>
-              </div>
+              {isHost && (
+                <div className="lobby-rule-choices mt-3 grid grid-cols-2 gap-2">
+                  <Button size="sm" className="lobby-rule-button" variant={room.options.visibility === "public" ? "secondary" : "ghost"} aria-pressed={room.options.visibility === "public"} onClick={() => setVisibility("public")}>
+                    <Eye size={14} className="mr-1 inline" /> Para todos
+                  </Button>
+                  <Button size="sm" className="lobby-rule-button" variant={room.options.visibility === "secret" ? "secondary" : "ghost"} aria-pressed={room.options.visibility === "secret"} onClick={() => setVisibility("secret")}>
+                    <EyeOff size={14} className="mr-1 inline" /> Oculto
+                  </Button>
+                </div>
+              )}
               <div className="lobby-rule-status">
                 <span className="lobby-rule-dot" />
                 {room.options.visibility === "secret" ? "Modo secreto activo" : "Todos ven las capas"}
               </div>
             </section>
 
-            <section className="lobby-panel flex min-h-[220px] flex-col">
+            <section className="lobby-panel lobby-tab-content flex min-h-[220px] flex-col" data-tab="table" data-active={mobileTab === "table"}>
               <h2 className="lobby-panel-title"><MessageCircle size={18} /> Chat de cocina</h2>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {CHAT_EMOJIS.map((emoji) => <button key={emoji} type="button" disabled={connection !== "connected"} title={connection === "connected" ? `Enviar ${emoji}` : "Reconectando con la sala"} onClick={() => sendChat(emoji)} className="lobby-emoji">{emoji}</button>)}
@@ -155,8 +181,8 @@ export function LobbyView({ onExit }: LobbyViewProps) {
       </div>
 
       <Modal open={showQr} title="QR de la sala" onClose={() => setShowQr(false)}>
-        <div className="flex flex-col items-center gap-4 py-4">
-          <div className="rounded-2xl border-4 border-brand-crust bg-white p-4 shadow-xl"><QRCodeSVG value={inviteUrl} size={200} includeMargin /></div>
+        <div className="flex flex-col items-center gap-3 py-2 sm:gap-4 sm:py-4">
+          <div className="rounded-2xl border-4 border-brand-crust bg-white p-3 shadow-xl sm:p-4"><QRCodeSVG value={inviteUrl} size={200} includeMargin className="h-auto w-40 sm:w-[200px]" /></div>
           <p className="text-center text-pretty text-sm text-brand-bechamel/70">Tus amigos pueden escanear este código para unirse directamente.</p>
           <Button onClick={() => setShowQr(false)}>Entendido</Button>
         </div>

@@ -44,7 +44,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
           <motion.div
             {...(modalProps as Record<string, unknown>)}
             ref={modalRef}
-            className="w-full max-w-md rounded-2xl border-3 border-brand-crust bg-brand-table p-5 shadow-card"
+            className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-2xl border-3 border-brand-crust bg-brand-table p-5 shadow-card"
             initial={{ scale: 0.9, y: 16 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0 }}

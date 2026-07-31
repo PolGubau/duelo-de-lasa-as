@@ -128,12 +128,8 @@ body {
   padding: 0.85rem 0;
 }
 
-.lobby-room-card {
-  border-bottom: 2px dashed rgba(255, 183, 3, 0.28);
-}
-
-.lobby-panel {
-  border-top: 1px dashed rgba(248, 249, 250, 0.2);
+.lobby-mobile-tabs {
+  display: none;
 }
 
 .lobby-code-tile {
@@ -239,7 +235,7 @@ body {
   content: "+";
   font-size: 1.3rem;
   line-height: 1;
-  transform: translateY(-0.06em);
+  transform: translateY(-0.16em);
 }
 
 .lobby-player-empty small {
@@ -327,6 +323,39 @@ body {
   .lobby-room-card,
   .lobby-panel {
     padding: 0.7rem 0;
+  }
+
+  .lobby-layout {
+    display: block;
+  }
+
+  .lobby-secondary {
+    gap: 0;
+  }
+
+  .lobby-mobile-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem;
+    border-bottom: 1px solid rgba(248, 249, 250, 0.18);
+    padding-bottom: 0.45rem;
+  }
+
+  .lobby-mobile-tabs button {
+    min-height: 2.25rem;
+    border-radius: 0.5rem;
+    color: rgba(248, 249, 250, 0.58);
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+  }
+
+  .lobby-mobile-tabs button.is-active {
+    color: var(--color-brand-cheese);
+    background: rgba(255, 183, 3, 0.14);
+  }
+
+  .lobby-tab-content[data-active="false"] {
+    display: none;
   }
 
   .lobby-code-tile {
@@ -730,14 +759,4 @@ body {
 
 .font-display {
   font-family: var(--font-display);
-}
-
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-brand-crust);
-  border-radius: 999px;
 }
