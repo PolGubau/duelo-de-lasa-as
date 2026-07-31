@@ -57,7 +57,12 @@ export function FinishedView({ state, onExit }: FinishedViewProps) {
                 key={p.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.25 + index * 0.08, type: "spring", stiffness: 380, damping: 30 }}
+                transition={{
+                  delay: 0.25 + index * 0.08,
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
                 className={cn(p.id === winner?.id && "rounded-xl ring-2 ring-brand-cheese")}
               >
                 <ScoreBreakdown player={p} score={scores.find((s) => s.playerId === p.id)!} />

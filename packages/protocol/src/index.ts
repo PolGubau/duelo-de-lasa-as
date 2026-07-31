@@ -51,6 +51,8 @@ export type ServerEvent = {
     | "error";
   message: string;
   playerId?: string;
+  /** Objetivo de un condimento arrojado, si lo hubo. */
+  targetPlayerId?: string;
 };
 
 export type ClientMessage =

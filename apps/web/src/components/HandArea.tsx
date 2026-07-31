@@ -67,7 +67,7 @@ export function HandArea({ state }: HandAreaProps) {
     actions.push({
       key: "throw",
       label: "Lanzar a un rival",
-      variant: "secondary",
+      variant: "primary",
       run: () => beginThrow(selectedId),
     });
   }

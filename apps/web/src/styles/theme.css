@@ -70,7 +70,11 @@ body {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-image: repeating-linear-gradient(45deg, transparent 0 7px, rgba(255, 183, 3, 0.035) 7px 8px);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 7px,
+    rgba(255, 183, 3, 0.035) 7px 8px
+  );
   background-size: 16px 16px;
   content: "";
   opacity: 0.45;
@@ -107,7 +111,9 @@ body {
   color: rgba(248, 249, 250, 0.72);
   font-family: var(--font-display);
   font-size: 0.8rem;
-  transition: color 140ms ease, transform 140ms ease;
+  transition:
+    color 140ms ease,
+    transform 140ms ease;
 }
 
 .lobby-exit:hover {
@@ -147,7 +153,10 @@ body {
   text-align: center;
   text-indent: 0.28em;
   text-shadow: 0 3px 0 var(--color-brand-crust);
-  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+  transition:
+    border-color 140ms ease,
+    background 140ms ease,
+    transform 140ms ease;
 }
 
 .lobby-code-tile:hover {
@@ -235,7 +244,7 @@ body {
   color: rgba(248, 249, 250, 0.35);
 }
 
-.lobby-player-empty>span {
+.lobby-player-empty > span {
   display: grid;
   width: 2rem;
   height: 2rem;
@@ -245,7 +254,7 @@ body {
   font-size: 0;
 }
 
-.lobby-player-empty>span::after {
+.lobby-player-empty > span::after {
   content: "+";
   font-size: 1.3rem;
   line-height: 1;
@@ -265,7 +274,9 @@ body {
 }
 
 .lobby-rule-button[aria-pressed="true"] {
-  box-shadow: 0 4px 0 var(--color-brand-crust), 0 0 0 2px rgba(255, 183, 3, 0.24);
+  box-shadow:
+    0 4px 0 var(--color-brand-crust),
+    0 0 0 2px rgba(255, 183, 3, 0.24);
 }
 
 .lobby-rule-button[aria-pressed="true"] svg {
@@ -296,7 +307,9 @@ body {
   background: rgba(8, 20, 35, 0.45);
   padding: 0.35rem 0.5rem;
   font-size: 1.25rem;
-  transition: transform 100ms ease, background 100ms ease;
+  transition:
+    transform 100ms ease,
+    background 100ms ease;
 }
 
 .lobby-emoji:hover {
@@ -328,7 +341,6 @@ body {
 }
 
 @media (max-width: 640px) {
-
   .lobby-shell {
     /* Una fila de CTA y, si procede, el aviso del anfitrión. */
     --lobby-actions-space: 6.5rem;
@@ -404,12 +416,12 @@ body {
     gap: 0.45rem;
   }
 
-  .lobby-actions>p {
+  .lobby-actions > p {
     min-width: 0;
     text-align: center;
   }
 
-  .lobby-actions>div:last-child {
+  .lobby-actions > div:last-child {
     width: 100%;
   }
 
@@ -455,7 +467,9 @@ body {
   border: 2px solid rgba(248, 249, 250, 0.65);
   border-radius: 50%;
   background: #dce8ee;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 rgba(5, 17, 31, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 3px 0 rgba(5, 17, 31, 0.3);
 }
 
 .lasagna-empty {
@@ -556,13 +570,24 @@ body {
 /* --- Splash de acción tipo casino --------------------------------------- */
 
 .splash-burst {
-  background: radial-gradient(circle, rgba(255, 183, 3, 0.45) 0%, transparent 68%);
+  background: radial-gradient(circle, rgba(255, 183, 3, 0.62) 0%, transparent 72%);
+}
+
+.splash-backdrop {
+  background: rgba(7, 18, 32, 0.82);
+  backdrop-filter: blur(3px);
+}
+
+.splash-burst-impact {
+  background: radial-gradient(circle, rgba(230, 57, 70, 0.82) 0%, transparent 72%);
 }
 
 .splash-rays {
-  background: repeating-conic-gradient(from 0deg,
-      rgba(255, 255, 255, 0.16) 0deg 8deg,
-      transparent 8deg 20deg);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.16) 0deg 8deg,
+    transparent 8deg 20deg
+  );
   animation: splash-spin 3.2s linear infinite;
 }
 
@@ -689,14 +714,16 @@ body {
   padding: 0.42rem 0.72rem 0.42rem 0.48rem;
   color: var(--color-brand-bechamel);
   background: linear-gradient(145deg, #399f91, #237d72);
-  box-shadow: 0 4px 0 var(--color-brand-crust), 0 10px 22px rgba(0, 0, 0, 0.28);
+  box-shadow:
+    0 4px 0 var(--color-brand-crust),
+    0 10px 22px rgba(0, 0, 0, 0.28);
   font-family: var(--font-display);
   font-size: 0.78rem;
   line-height: 1.2;
   pointer-events: none;
 }
 
-.feedback-toast>span:first-child {
+.feedback-toast > span:first-child {
   display: grid;
   width: 1.7rem;
   height: 1.7rem;
@@ -727,8 +754,8 @@ body {
   color: var(--color-brand-crust);
 }
 
-.feedback-win>span:first-child,
-.feedback-score>span:first-child {
+.feedback-win > span:first-child,
+.feedback-score > span:first-child {
   border-color: rgba(74, 40, 16, 0.9);
   background: rgba(74, 40, 16, 0.78);
 }
@@ -738,7 +765,6 @@ body {
 }
 
 @keyframes target-pulse {
-
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(255, 183, 3, 0.35);
@@ -750,7 +776,6 @@ body {
 }
 
 @keyframes feedback-shake {
-
   0%,
   100% {
     transform: translateX(-50%) rotate(0);

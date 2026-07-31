@@ -75,9 +75,7 @@ export function TradingView({ state }: TradingViewProps) {
                 <Avatar id={p.id} name={p.name} size="sm" />
                 <span className="font-display">{p.name}</span>
               </div>
-              <span className="text-brand-cheese">
-                {p.chefId ? getChef(p.chefId).name : "—"}
-              </span>
+              <span className="text-brand-cheese">{p.chefId ? getChef(p.chefId).name : "—"}</span>
             </motion.div>
           ))}
         </AnimatePresence>

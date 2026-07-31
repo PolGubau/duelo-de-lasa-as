@@ -247,7 +247,7 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
     actions.push({
       key: "throw",
       label: "Lanzar a un rival",
-      variant: "secondary",
+      variant: "primary",
       highlight: guide.highlight === "throw",
       run: () => setThrowing(true),
     });

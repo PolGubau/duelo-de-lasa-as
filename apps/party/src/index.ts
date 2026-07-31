@@ -249,7 +249,7 @@ export class LasanaRoom extends DurableObject<Env> {
     if (!result.ok) return this.reject(playerId, result.reason);
     this.state = result.state;
     void this.persist();
-    const event = this.eventFor(message.action, playerId, message.cardId);
+    const event = this.eventFor(message.action, playerId, message.cardId, message.targetPlayerId);
     this.broadcastState(event);
   }
 
@@ -257,6 +257,7 @@ export class LasanaRoom extends DurableObject<Env> {
     action: Extract<ClientMessage, { type: "action" }>["action"],
     playerId: string,
     cardId?: string,
+    targetPlayerId?: string,
   ): ServerEvent {
     const cardName = cardId && this.state ? getCard(cardId).name : "";
     const map = {
@@ -275,6 +276,10 @@ export class LasanaRoom extends DurableObject<Env> {
       kind: map[action],
       message: cardName ? `${cardName} resuelto` : "Acción resuelta",
       playerId,
+      targetPlayerId:
+        action === "playCondiment" && targetPlayerId && targetPlayerId !== playerId
+          ? targetPlayerId
+          : undefined,
     };
   }
 

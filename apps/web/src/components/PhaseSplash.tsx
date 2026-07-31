@@ -7,8 +7,8 @@ import { playSound } from "../lib/sound.ts";
 
 /** Veces que se explica cada fase antes de mostrar solo el rótulo. */
 const EXPLAIN_TIMES = 2;
-const EXPLAIN_DURATION = 5000;
-const LABEL_DURATION = 2600;
+const EXPLAIN_DURATION = 7000;
+const LABEL_DURATION = 4000;
 const seen = new Map<string, number>();
 
 interface PhaseSplashProps {
@@ -87,7 +87,9 @@ export function PhaseSplash({ state }: PhaseSplashProps) {
               {shown.info.label}
             </span>
             {shown.explain && (
-              <p className="text-center text-pretty text-sm text-brand-bechamel/90">{shown.info.help}</p>
+              <p className="text-center text-pretty text-sm text-brand-bechamel/90">
+                {shown.info.help}
+              </p>
             )}
             <span className="mt-2 text-xs text-brand-bechamel/60">Toca para continuar</span>
           </motion.div>

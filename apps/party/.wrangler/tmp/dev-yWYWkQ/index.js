@@ -1052,10 +1052,10 @@ var LasanaRoom = class extends DurableObject {
     if (!result.ok) return this.reject(playerId, result.reason);
     this.state = result.state;
     void this.persist();
-    const event = this.eventFor(message.action, playerId, message.cardId);
+    const event = this.eventFor(message.action, playerId, message.cardId, message.targetPlayerId);
     this.broadcastState(event);
   }
-  eventFor(action, playerId, cardId) {
+  eventFor(action, playerId, cardId, targetPlayerId) {
     const cardName = cardId && this.state ? getCard(cardId).name : "";
     const map = {
       playIngredient: "play",
@@ -1072,7 +1072,8 @@ var LasanaRoom = class extends DurableObject {
     return {
       kind: map[action],
       message: cardName ? `${cardName} resuelto` : "Acci\xF3n resuelta",
-      playerId
+      playerId,
+      targetPlayerId: action === "playCondiment" && targetPlayerId && targetPlayerId !== playerId ? targetPlayerId : void 0
     };
   }
   async leave(ws) {

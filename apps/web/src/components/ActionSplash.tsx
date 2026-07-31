@@ -15,7 +15,13 @@ const ACTION_DURATION = 3400;
 
 export function ActionSplash() {
   const feedback = useGameStore((s) => s.feedback);
-  const [shown, setShown] = useState<{ id: number; message: string; cue: SoundCue } | null>(null);
+  const sessionId = useGameStore((s) => s.sessionId);
+  const [shown, setShown] = useState<{
+    id: number;
+    message: string;
+    cue: SoundCue;
+    targetPlayerId?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!feedback || !SPLASH[feedback.cue]) return;
@@ -25,13 +31,21 @@ export function ActionSplash() {
   useEffect(() => {
     if (!shown) return;
     const entry = shown;
-    const timer = window.setTimeout(() => {
-      setShown((current) => (current?.id === entry.id ? null : current));
-    }, ACTION_DURATION);
+    const timer = window.setTimeout(
+      () => {
+        setShown((current) => (current?.id === entry.id ? null : current));
+      },
+      shown.cue === "attack" ? 5000 : ACTION_DURATION,
+    );
     return () => window.clearTimeout(timer);
   }, [shown]);
 
-  const art = shown ? SPLASH[shown.cue] : undefined;
+  const wasHit = shown?.cue === "attack" && shown.targetPlayerId === sessionId;
+  const art = shown
+    ? wasHit
+      ? { icon: "💥", title: "¡Te han dado!", color: "var(--color-brand-tomato)" }
+      : SPLASH[shown.cue]
+    : undefined;
 
   return (
     <AnimatePresence>
@@ -53,7 +67,14 @@ export function ActionSplash() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div className="splash-burst absolute inset-0" />
+          <div className="splash-backdrop absolute inset-0" />
+          <div
+            className={
+              wasHit
+                ? "splash-burst splash-burst-impact absolute inset-0"
+                : "splash-burst absolute inset-0"
+            }
+          />
           <motion.div
             className="splash-rays absolute h-[140vmax] w-[140vmax] opacity-40"
             initial={{ scale: 0.4 }}
