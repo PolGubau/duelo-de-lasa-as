@@ -85,13 +85,26 @@ export const useGameStore = create<GameStore>((set, get) => {
     }, 1800);
   }
 
-  function send(message: object): void {
+  function notifyError(message: string): void {
+    announce(message, "error");
+  }
+
+  function send(message: object): boolean {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      set({ error: "La conexión con la sala no está disponible." });
-      playSound("error");
-      return;
+      const error = "No se pudo enviar: estamos reconectando con la sala.";
+      set({ error });
+      notifyError(error);
+      return false;
     }
-    socket.send(JSON.stringify(message));
+    try {
+      socket.send(JSON.stringify(message));
+      return true;
+    } catch {
+      const error = "No se pudo enviar el mensaje a la sala.";
+      set({ error });
+      notifyError(error);
+      return false;
+    }
   }
 
   function connect(code: string, name: string): void {
@@ -101,11 +114,15 @@ export const useGameStore = create<GameStore>((set, get) => {
       window.clearTimeout(reconnectTimer);
       reconnectTimer = null;
     }
-    socket?.close();
+    const previousSocket = socket;
+    socket = null;
+    previousSocket?.close();
     set({ connection: "connecting", error: null, room: null, state: null, sessionId: null });
-    socket = new WebSocket(`${PARTY_URL.replace(/\/$/, "")}/room/${code}`);
-    socket.onopen = () =>
-      socket?.send(
+    const roomSocket = new WebSocket(`${PARTY_URL.replace(/\/$/, "")}/room/${code}`);
+    socket = roomSocket;
+    roomSocket.onopen = () => {
+      if (socket !== roomSocket) return;
+      roomSocket.send(
         JSON.stringify({
           type: "join",
           protocolVersion: PROTOCOL_VERSION,
@@ -113,7 +130,9 @@ export const useGameStore = create<GameStore>((set, get) => {
           sessionId: savedSession,
         }),
       );
-    socket.onmessage = (event) => {
+    };
+    roomSocket.onmessage = (event) => {
+      if (socket !== roomSocket) return;
       let message: ServerMessage;
       try {
         message = JSON.parse(event.data as string) as ServerMessage;
@@ -123,7 +142,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       if (message.type === "joined") {
         window.localStorage.setItem(`lasana-room-${message.room.code}`, message.sessionId);
         set({ sessionId: message.sessionId, room: message.room, connection: "connected" });
-        announce(`Sala ${message.room.code}`, "score");
+        announce(`Sala ${message.room.code}`, "positive");
         const preferred = useSettingsStore.getState().defaultVisibility;
         if (
           message.room.hostId === message.sessionId &&
@@ -142,7 +161,7 @@ export const useGameStore = create<GameStore>((set, get) => {
           announce(
             message.room.options.visibility === "public"
               ? "Mesa visible para todos"
-              : "Lasaña oculta: modo secreto",
+              : "Oculto: modo secreto",
             "positive",
           );
         }
@@ -157,16 +176,20 @@ export const useGameStore = create<GameStore>((set, get) => {
         if (message.event) announce(message.event.message, cueFor(message.event.kind));
       } else if (message.type === "rejected") {
         set({ error: message.reason, pendingVisibility: null });
-        playSound("error");
+        notifyError(message.reason);
       } else if (message.type === "error") {
         set({ error: message.message, connection: "error", pendingVisibility: null });
-        playSound("error");
+        notifyError(message.message);
       }
     };
-    socket.onerror = () =>
-      set({ connection: "error", error: "No se pudo conectar con el servidor de salas." });
-    socket.onclose = () => {
-      if (get().connection === "idle" || !lastRoom) return;
+    roomSocket.onerror = () => {
+      if (socket !== roomSocket) return;
+      const error = "No se pudo conectar con el servidor de salas.";
+      set({ connection: "error", error });
+      notifyError(error);
+    };
+    roomSocket.onclose = () => {
+      if (socket !== roomSocket || get().connection === "idle" || !lastRoom) return;
       set({ connection: "connecting" });
       scheduleReconnect();
     };

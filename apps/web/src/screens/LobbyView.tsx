@@ -5,13 +5,11 @@ import {
   Crown,
   Eye,
   EyeOff,
-  Flame,
   LogOut,
   MessageCircle,
   Play,
   QrCode,
   Shield,
-  Wifi,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useState } from "react";
@@ -54,8 +52,6 @@ export function LobbyView({ onExit }: LobbyViewProps) {
   return (
     <div className="lobby-shell min-h-screen overflow-x-hidden px-3 py-3 sm:px-6 sm:py-5">
       <FeedbackToast />
-      <div className="lobby-glow lobby-glow-one" aria-hidden="true" />
-      <div className="lobby-glow lobby-glow-two" aria-hidden="true" />
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-4">
         <ConnectionBanner />
 
@@ -73,17 +69,11 @@ export function LobbyView({ onExit }: LobbyViewProps) {
         <main className="grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
           <section className="flex flex-col gap-4">
             <div className="lobby-room-card">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="lobby-eyebrow flex items-center gap-1.5"><Flame size={14} /> MESA ABIERTA</p>
-                  <h1 className="mt-1 font-display text-2xl text-brand-bechamel sm:text-3xl">Código de sala</h1>
-                </div>
-                <span className="lobby-status"><Wifi size={13} /> {connection === "connected" ? "Conectado" : "Conectando"}</span>
-              </div>
+              <h1 className="font-display text-xl text-brand-bechamel sm:text-3xl">Código de sala</h1>
               <div className="lobby-code-tile mt-4">
                 <span>{room.code}</span>
               </div>
-              <p className="mt-3 text-center text-xs text-brand-bechamel/60">Comparte el código o invita directamente a tus rivales.</p>
+              <p className="mt-3 text-center text-pretty text-xs text-brand-bechamel/60">Comparte el código o invita directamente a tus rivales.</p>
               <div className="mt-4 flex justify-center gap-2">
                 <Button size="sm" variant="ghost" onClick={copyInvite}>
                   <Clipboard size={15} className="mr-1.5 inline" /> {copied ? "¡Copiado!" : "Copiar enlace"}
@@ -98,7 +88,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
               <div className="lobby-section-heading mb-3">
                 <div>
                   <h2 className="lobby-panel-title">En la mesa</h2>
-                  <p className="text-[11px] text-brand-bechamel/55">Comensales listos para cocinar</p>
+                  <p className="text-pretty text-[11px] text-brand-bechamel/55">Comensales listos para cocinar</p>
                 </div>
                 <span className="lobby-count-badge">{room.players.length}<b>/6</b></span>
               </div>
@@ -125,7 +115,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
           <aside className="flex flex-col gap-4">
             <section className="lobby-panel">
               <h2 className="lobby-panel-title"><Shield size={18} /> Reglas de la mesa</h2>
-              <p className="mt-2 text-xs leading-relaxed text-brand-bechamel/65">
+              <p className="mt-2 text-pretty text-xs leading-relaxed text-brand-bechamel/65">
                 {room.options.visibility === "secret" ? "Lasaña oculta: las capas rivales se revelan al puntuar." : "Lasaña visible: todos ven las capas de todos."}
               </p>
               <div className="lobby-rule-choices mt-3 grid grid-cols-2 gap-2">
@@ -133,7 +123,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
                   <Eye size={14} className="mr-1 inline" /> Para todos
                 </Button>
                 <Button size="sm" className="lobby-rule-button" variant={room.options.visibility === "secret" ? "secondary" : "ghost"} disabled={!isHost} aria-pressed={room.options.visibility === "secret"} onClick={() => setVisibility("secret")}>
-                  <EyeOff size={14} className="mr-1 inline" /> Lasaña oculta
+                  <EyeOff size={14} className="mr-1 inline" /> Oculto
                 </Button>
               </div>
               <div className="lobby-rule-status">
@@ -145,28 +135,29 @@ export function LobbyView({ onExit }: LobbyViewProps) {
             <section className="lobby-panel flex min-h-[220px] flex-col">
               <h2 className="lobby-panel-title"><MessageCircle size={18} /> Chat de cocina</h2>
               <div className="mt-3 flex flex-wrap gap-1.5">
-                {CHAT_EMOJIS.map((emoji) => <button key={emoji} type="button" onClick={() => sendChat(emoji)} className="lobby-emoji">{emoji}</button>)}
+                {CHAT_EMOJIS.map((emoji) => <button key={emoji} type="button" disabled={connection !== "connected"} title={connection === "connected" ? `Enviar ${emoji}` : "Reconectando con la sala"} onClick={() => sendChat(emoji)} className="lobby-emoji">{emoji}</button>)}
               </div>
+              {connection !== "connected" && <p className="mt-2 text-pretty text-xs text-brand-bechamel/55" role="status">Reconectando: el chat estará disponible enseguida.</p>}
               <div className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto rounded-xl bg-black/10 p-2 text-xs">
-                {chat.length === 0 ? <p className="m-auto text-center text-brand-bechamel/40">Manda un emoji para romper el hielo.</p> : chat.map((entry) => <p key={`${entry.playerId}_${entry.at}`}><span className="text-brand-bechamel/60">{entry.name}:</span> <span className="text-lg">{entry.emoji}</span></p>)}
+                {chat.length === 0 ? <p className="m-auto text-center text-pretty text-brand-bechamel/40">Manda un emoji para romper el hielo.</p> : chat.map((entry) => <p key={`${entry.playerId}_${entry.at}`}><span className="text-brand-bechamel/60">{entry.name}:</span> <span className="text-lg">{entry.emoji}</span></p>)}
               </div>
             </section>
           </aside>
         </main>
 
         <footer className="lobby-actions">
-          {isHost && !canStart && <p className="text-xs text-brand-bechamel/55">Necesitas 2 listos para empezar</p>}
+          {isHost && !canStart && <p className="text-pretty text-xs text-brand-bechamel/55">Necesitas 2 listos para empezar</p>}
           <div className="flex gap-2">
-            <Button size="sm" className="min-h-10 px-3 text-sm" variant={me?.ready ? "ghost" : "secondary"} onClick={toggleReady}>{me?.ready ? "No listo" : "Listo"}</Button>
-            {isHost && <Button size="sm" className="min-h-10 px-3 text-sm" disabled={!canStart} onClick={startRoom}><Play size={15} className="mr-1 inline fill-current" /> Empezar</Button>}
+            <Button size="sm" className="min-h-10 px-3 text-sm" disabled={connection !== "connected"} variant={me?.ready ? "ghost" : "secondary"} onClick={toggleReady}>{me?.ready ? "No listo" : "Listo"}</Button>
+            {isHost && <Button size="sm" className="min-h-10 px-3 text-sm" disabled={!canStart || connection !== "connected"} onClick={startRoom}><Play size={15} className="mr-1 inline fill-current" /> Empezar</Button>}
           </div>
         </footer>
       </div>
 
-      <Modal open={showQr} title="Código QR de la sala" onClose={() => setShowQr(false)}>
+      <Modal open={showQr} title="QR de la sala" onClose={() => setShowQr(false)}>
         <div className="flex flex-col items-center gap-4 py-4">
           <div className="rounded-2xl border-4 border-brand-crust bg-white p-4 shadow-xl"><QRCodeSVG value={inviteUrl} size={200} includeMargin /></div>
-          <p className="text-center text-sm text-brand-bechamel/70">Tus amigos pueden escanear este código para unirse directamente.</p>
+          <p className="text-center text-pretty text-sm text-brand-bechamel/70">Tus amigos pueden escanear este código para unirse directamente.</p>
           <Button onClick={() => setShowQr(false)}>Entendido</Button>
         </div>
       </Modal>
