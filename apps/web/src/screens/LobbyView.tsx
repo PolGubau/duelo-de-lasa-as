@@ -26,6 +26,8 @@ interface LobbyViewProps {
   onExit: () => void;
 }
 
+type CopyStatus = "code" | "link" | "error" | null;
+
 export function LobbyView({ onExit }: LobbyViewProps) {
   const room = useGameStore((s) => s.room)!;
   const sessionId = useGameStore((s) => s.sessionId);
@@ -35,7 +37,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
   const setVisibility = useGameStore((s) => s.setVisibility);
   const sendChat = useGameStore((s) => s.sendChat);
   const chat = useGameStore((s) => s.chat);
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>(null);
   const [showQr, setShowQr] = useState(false);
   const [mobileTab, setMobileTab] = useState<"table" | "rules">("table");
   const me = room.players.find((player) => player.id === sessionId);
@@ -43,11 +45,20 @@ export function LobbyView({ onExit }: LobbyViewProps) {
   const canStart = isHost && room.players.length >= 2 && room.players.every((player) => player.ready);
   const inviteUrl = `${window.location.origin}${roomPath(room.code)}`;
 
-  function copyInvite(): void {
-    void navigator.clipboard?.writeText(inviteUrl).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1800);
-    });
+  function showCopyStatus(status: Exclude<CopyStatus, null>): void {
+    setCopyStatus(status);
+    window.setTimeout(() => setCopyStatus(null), 1800);
+  }
+
+  function copy(value: string, target: Exclude<CopyStatus, "error" | null>): void {
+    if (!navigator.clipboard) {
+      showCopyStatus("error");
+      return;
+    }
+    void navigator.clipboard
+      .writeText(value)
+      .then(() => showCopyStatus(target))
+      .catch(() => showCopyStatus("error"));
   }
 
   return (
@@ -71,13 +82,27 @@ export function LobbyView({ onExit }: LobbyViewProps) {
           <section className="flex flex-col gap-4">
             <div className="lobby-room-card">
               <h1 className="font-display text-xl text-brand-bechamel sm:text-3xl">Código de sala</h1>
-              <div className="lobby-code-tile mt-4">
+              <button
+                type="button"
+                className="lobby-code-tile mt-4"
+                onClick={() => copy(room.code, "code")}
+                aria-describedby="room-code-help"
+                aria-label={`Copiar el código de sala ${room.code}`}
+              >
                 <span>{room.code}</span>
-              </div>
-              <p className="mt-3 text-center text-pretty text-xs text-brand-bechamel/60">Comparte el código a tus rivales.</p>
+              </button>
+              <p id="room-code-help" className="mt-3 text-center text-pretty text-xs text-brand-bechamel/60" role="status">
+                {copyStatus === "code"
+                  ? "Código copiado"
+                  : copyStatus === "link"
+                    ? "Enlace copiado"
+                    : copyStatus === "error"
+                      ? "No se pudo copiar. Prueba de nuevo"
+                      : "Toca el código para copiarlo"}
+              </p>
               <div className="mt-4 flex justify-center gap-2">
-                <Button size="sm" variant="ghost" onClick={copyInvite}>
-                  <Clipboard size={15} className="mr-1.5 inline" /> {copied ? "¡Copiado!" : "Copiar enlace"}
+                <Button size="sm" variant="ghost" onClick={() => copy(inviteUrl, "link")}>
+                  <Clipboard size={15} className="mr-1.5 inline" /> Copiar enlace
                 </Button>
                 <Button size="sm" variant="secondary" onClick={() => setShowQr(true)}>
                   <QrCode size={15} className="mr-1.5 inline" /> QR

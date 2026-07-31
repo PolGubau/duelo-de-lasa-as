@@ -133,6 +133,8 @@ body {
 }
 
 .lobby-code-tile {
+  display: block;
+  width: 100%;
   border: 2px dashed rgba(255, 183, 3, 0.55);
   border-radius: 1rem;
   background: rgba(8, 20, 35, 0.32);
@@ -145,6 +147,18 @@ body {
   text-align: center;
   text-indent: 0.28em;
   text-shadow: 0 3px 0 var(--color-brand-crust);
+  transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
+}
+
+.lobby-code-tile:hover {
+  border-color: var(--color-brand-cheese);
+  background: rgba(255, 183, 3, 0.1);
+  transform: translateY(-1px);
+}
+
+.lobby-code-tile:focus-visible {
+  outline: 3px solid var(--color-brand-basil);
+  outline-offset: 3px;
 }
 
 .lobby-ready {
