@@ -22,6 +22,7 @@ export function HomeScreen({ onTutorial }: HomeScreenProps) {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-brand-table">
+      <div className="home-backdrop" aria-hidden="true" />
       <IngredientRain />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 p-6">
         <div className="text-center">

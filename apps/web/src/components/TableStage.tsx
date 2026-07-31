@@ -68,7 +68,11 @@ export function TableStage({
                 ? "animate-target cursor-pointer hover:border-brand-cheese"
                 : "cursor-default",
             )}
-            style={{ left: `${x}%`, top: `${y}%`, transform: `translate(-50%,-50%) scale(${scale})` }}
+            style={{
+              left: `${x}%`,
+              top: `${y}%`,
+              transform: `translate(-50%,-50%) scale(${scale})`,
+            }}
           >
             <Avatar id={player.id} name={player.name} size="sm" />
             <span className="max-w-full truncate font-display text-[10px] text-brand-bechamel">
@@ -77,12 +81,7 @@ export function TableStage({
             {chef && (
               <span className="max-w-full truncate text-[8px] text-brand-cheese">{chef.name}</span>
             )}
-            <LasagnaStack3D
-              layers={player.lasagna}
-              hidden={secret}
-              slabHeight={8}
-              width={78}
-            />
+            <LasagnaStack3D layers={player.lasagna} hidden={secret} slabHeight={8} width={78} />
             <span className="font-display text-xs text-brand-cheese">
               {secret ? "?" : runningTotal(player.lasagna)}
             </span>

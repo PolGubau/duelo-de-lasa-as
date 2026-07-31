@@ -15,7 +15,12 @@ export default function App() {
 
   useEffect(() => {
     const exitTimer = window.setTimeout(() => setSplashPhase("exit"), 900);
-    const finishTimer = window.setTimeout(() => setSplashPhase("done"), 1320);
+    const finishTimer = window.setTimeout(() => {
+      setSplashPhase("done");
+      const bootSplash = document.getElementById("boot-splash");
+      bootSplash?.classList.add("boot-splash-hidden");
+      window.setTimeout(() => bootSplash?.remove(), 400);
+    }, 1320);
     return () => {
       window.clearTimeout(exitTimer);
       window.clearTimeout(finishTimer);

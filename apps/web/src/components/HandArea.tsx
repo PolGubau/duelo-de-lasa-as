@@ -41,8 +41,12 @@ export function HandArea({ state }: HandAreaProps) {
     state.condimentsPlayedThisTurn < state.config.maxCondimentsPerTurn;
 
   /** Solo se ofrecen las acciones que la carta seleccionada permite ahora mismo. */
-  const actions: { key: string; label: string; variant: "primary" | "secondary" | "ghost"; run: () => void }[] =
-    [];
+  const actions: {
+    key: string;
+    label: string;
+    variant: "primary" | "secondary" | "ghost";
+    run: () => void;
+  }[] = [];
   if (canPlayIngredient && selectedId) {
     actions.push({
       key: "play",

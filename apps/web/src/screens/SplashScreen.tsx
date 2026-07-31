@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { playSound } from "../lib/sound.ts";
 
 interface SplashScreenProps {
@@ -6,9 +6,25 @@ interface SplashScreenProps {
 }
 
 export function SplashScreen({ phase }: SplashScreenProps) {
+  const messages = [
+    "Precalentando el horno",
+    "Rallando el queso de los rivales",
+    "Colocando las capas perfectas",
+    "Untando la salsa con cuidado",
+    "Buscando una mesa libre",
+  ];
+  const [messageIndex, setMessageIndex] = useState(0);
+
   useEffect(() => {
     playSound("splash");
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setMessageIndex((index) => (index + 1) % messages.length);
+    }, 650);
+    return () => window.clearInterval(timer);
+  }, [messages.length]);
 
   return (
     <main
@@ -22,6 +38,10 @@ export function SplashScreen({ phase }: SplashScreenProps) {
         alt="¡Lasaña!"
         className="splash-logo relative z-10 w-[min(86vw,30rem)] drop-shadow-[0_14px_0_rgba(74,40,16,0.7)]"
       />
+      <p className="splash-copy" aria-live="polite">
+        {messages[messageIndex]}
+        <span className="splash-dots" aria-hidden="true" />
+      </p>
     </main>
   );
 }

@@ -64,8 +64,8 @@ export function CardView({
         onTapStart={
           interactive
             ? () => {
-              vibrate(8);
-            }
+                vibrate(8);
+              }
             : undefined
         }
         whileHover={interactive ? { scale: 1.08, y: -10, rotate: 0 } : undefined}
@@ -137,7 +137,11 @@ export function CardView({
             className="flex h-40 w-28 items-center justify-center rounded-xl border-3 p-2 shadow-card"
             style={{ background: theme.background, borderColor: theme.frame }}
           >
-            <img src={cardImageSrc(card)} alt={card.name} className="h-full w-full object-contain" />
+            <img
+              src={cardImageSrc(card)}
+              alt={card.name}
+              className="h-full w-full object-contain"
+            />
           </div>
           <span className="rounded-full bg-brand-crust px-3 py-1 text-xs text-brand-cheese">
             {info.typeLabel}

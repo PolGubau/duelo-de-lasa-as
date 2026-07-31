@@ -52,10 +52,7 @@ export function ActionSplash() {
             transition={{ duration: 0.45, ease: "easeOut" }}
           >
             <span className="text-7xl drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">{art.icon}</span>
-            <span
-              className="font-display text-4xl text-outline"
-              style={{ color: art.color }}
-            >
+            <span className="font-display text-4xl text-outline" style={{ color: art.color }}>
               {art.title}
             </span>
             <span className="max-w-[80vw] text-center font-display text-sm text-brand-bechamel">

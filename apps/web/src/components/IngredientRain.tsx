@@ -1,4 +1,5 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
+import { playSound, vibrate } from "../lib/sound.ts";
 
 const ICONS = [
   "/assets/cards/ingredients/card_fill_tomato_sauce.png",
@@ -43,6 +44,7 @@ function itemStyle(item: RainItem): CSSProperties {
  * todos arriba a la vez.
  */
 export function IngredientRain() {
+  const [popped, setPopped] = useState<Set<number>>(() => new Set());
   const items = useMemo<RainItem[]>(
     () =>
       Array.from({ length: ITEM_COUNT }, (_, index) => {
@@ -60,6 +62,20 @@ export function IngredientRain() {
     [],
   );
 
+  function pop(index: number): void {
+    if (popped.has(index)) return;
+    setPopped((current) => new Set(current).add(index));
+    playSound("pop");
+    vibrate(8);
+    window.setTimeout(() => {
+      setPopped((current) => {
+        const next = new Set(current);
+        next.delete(index);
+        return next;
+      });
+    }, 420);
+  }
+
   return (
     <div className="ingredient-rain" aria-hidden="true">
       {items.map((item, index) => (
@@ -67,8 +83,9 @@ export function IngredientRain() {
           key={index}
           src={item.icon}
           alt=""
-          className="ingredient-rain-item"
+          className={`ingredient-rain-item${popped.has(index) ? " is-popping" : ""}`}
           style={itemStyle(item)}
+          onClick={() => pop(index)}
         />
       ))}
     </div>

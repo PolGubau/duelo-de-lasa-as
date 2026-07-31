@@ -15,7 +15,8 @@ export type SoundCue =
   | "score"
   | "win"
   | "error"
-  | "splash";
+  | "splash"
+  | "pop";
 
 export interface AudioSettings {
   musicVolume: number;
@@ -174,6 +175,10 @@ export function playSound(cue: SoundCue): void {
       note(330, 0.08, 0.16, 0.045, "triangle");
       note(660, 0.18, 0.24, 0.055, "triangle");
       note(990, 0.27, 0.18, 0.035, "sine");
+      break;
+    case "pop":
+      note(620, 0, 0.06, 0.035, "triangle");
+      note(980, 0.045, 0.1, 0.03, "sine");
       break;
     case "positive":
       note(440, 0, 0.12);
