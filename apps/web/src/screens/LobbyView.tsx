@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CHAT_EMOJIS } from "../../../../packages/protocol/src/index.ts";
 import { Avatar } from "../components/Avatar.tsx";
 import { Button } from "../components/Button.tsx";
+import { ConnectionBanner } from "../components/ConnectionBanner.tsx";
 import { Modal } from "../components/Modal.tsx";
 import { useGameStore } from "../store/gameStore.ts";
 
@@ -33,6 +34,7 @@ export function LobbyView() {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5 p-6">
+      <ConnectionBanner />
       <div className="flex justify-center">
         <img
           src="/assets/ui/logo_lasana_game_compact.png"

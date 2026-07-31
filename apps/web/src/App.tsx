@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { startMusic } from "./lib/sound.ts";
 import { GameScreen } from "./screens/GameScreen.tsx";
 import { HomeScreen } from "./screens/HomeScreen.tsx";
@@ -10,6 +11,7 @@ import { useGameStore } from "./store/gameStore.ts";
 export default function App() {
   const state = useGameStore((s) => s.state);
   const room = useGameStore((s) => s.room);
+  const resetGame = useGameStore((s) => s.resetGame);
   const [tutorial, setTutorial] = useState(false);
   const [splashPhase, setSplashPhase] = useState<"enter" | "exit" | "done">("enter");
 
@@ -51,13 +53,25 @@ export default function App() {
       {splashPhase !== "done" ? (
         <SplashScreen phase={splashPhase} />
       ) : state ? (
-        <GameScreen />
+        <ErrorBoundary key="game" title="¡Se nos quemó la partida!" onReset={resetGame}>
+          <GameScreen />
+        </ErrorBoundary>
       ) : room ? (
-        <LobbyView />
+        <ErrorBoundary key="lobby" title="¡Se nos cayó la sala!" onReset={resetGame}>
+          <LobbyView />
+        </ErrorBoundary>
       ) : tutorial ? (
-        <TutorialScreen onExit={() => setTutorial(false)} />
+        <ErrorBoundary
+          key="tutorial"
+          title="¡Se nos quemó el tutorial!"
+          onReset={() => setTutorial(false)}
+        >
+          <TutorialScreen onExit={() => setTutorial(false)} />
+        </ErrorBoundary>
       ) : (
-        <HomeScreen onTutorial={() => setTutorial(true)} />
+        <ErrorBoundary key="home" title="¡Algo salió mal!">
+          <HomeScreen onTutorial={() => setTutorial(true)} />
+        </ErrorBoundary>
       )}
     </div>
   );

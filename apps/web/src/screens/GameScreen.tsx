@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ActionSplash } from "../components/ActionSplash.tsx";
+import { ConnectionBanner } from "../components/ConnectionBanner.tsx";
 import { FeedbackToast } from "../components/FeedbackToast.tsx";
 import { useGameStore } from "../store/gameStore.ts";
 import { ChefDrawView } from "./ChefDrawView.tsx";
@@ -23,6 +24,7 @@ export function GameScreen() {
       animate={shake ? { x: [0, -10, 9, -6, 4, 0], y: [0, 5, -4, 3, 0, 0] } : { x: 0, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      <ConnectionBanner />
       <FeedbackToast />
       <ActionSplash />
       {error && (

@@ -49,10 +49,12 @@ export function CardView({
   className,
 }: CardViewProps) {
   const [showInfo, setShowInfo] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const interactive = Boolean(onClick) && !disabled;
   const info = describeCard(card);
   const theme = cardTheme(card);
   const value = cardValue(card);
+  const src = cardImageSrc(card);
 
   return (
     <div className={cn("relative inline-block shrink-0", className)}>
@@ -93,11 +95,23 @@ export function CardView({
           aria-hidden="true"
         />
         <span className="relative z-10 flex flex-1 items-center justify-center p-1">
+          {!imgLoaded && (
+            <span
+              aria-hidden="true"
+              className="absolute inset-1 animate-pulse rounded-md bg-white/20"
+            />
+          )}
           <img
-            src={cardImageSrc(card)}
+            src={src}
             alt={card.name}
             draggable={false}
-            className="h-full w-full object-contain drop-shadow-[0_3px_4px_rgba(0,0,0,0.45)]"
+            loading="lazy"
+            decoding="async"
+            onLoad={() => setImgLoaded(true)}
+            className={cn(
+              "h-full w-full object-contain drop-shadow-[0_3px_4px_rgba(0,0,0,0.45)] transition-opacity duration-200",
+              imgLoaded ? "opacity-100" : "opacity-0",
+            )}
           />
         </span>
         {value && (
@@ -137,11 +151,7 @@ export function CardView({
             className="flex h-40 w-28 items-center justify-center rounded-xl border-3 p-2 shadow-card"
             style={{ background: theme.background, borderColor: theme.frame }}
           >
-            <img
-              src={cardImageSrc(card)}
-              alt={card.name}
-              className="h-full w-full object-contain"
-            />
+            <img src={src} alt={card.name} className="h-full w-full object-contain" />
           </div>
           <span className="rounded-full bg-brand-crust px-3 py-1 text-xs text-brand-cheese">
             {info.typeLabel}

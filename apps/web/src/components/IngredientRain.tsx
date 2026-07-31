@@ -79,14 +79,20 @@ export function IngredientRain() {
   return (
     <div className="ingredient-rain" aria-hidden="true">
       {items.map((item, index) => (
-        <img
+        <button
           key={index}
-          src={item.icon}
-          alt=""
           className={`ingredient-rain-item${popped.has(index) ? " is-popping" : ""}`}
           style={itemStyle(item)}
+          type="button"
+          aria-label="Ingrediente"
+          onPointerDown={(event) => {
+            event.stopPropagation();
+            pop(index);
+          }}
           onClick={() => pop(index)}
-        />
+        >
+          <img src={item.icon} alt="" />
+        </button>
       ))}
     </div>
   );
