@@ -11,19 +11,25 @@ const SPLASH: Partial<Record<SoundCue, { icon: string; title: string; color: str
   win: { icon: "🏆", title: "¡Victoria!", color: "var(--color-brand-cheese)" },
 };
 
+const ACTION_DURATION = 3400;
+
 export function ActionSplash() {
   const feedback = useGameStore((s) => s.feedback);
   const [shown, setShown] = useState<{ id: number; message: string; cue: SoundCue } | null>(null);
 
   useEffect(() => {
     if (!feedback || !SPLASH[feedback.cue]) return;
-    const entry = feedback;
-    setShown(entry);
+    setShown(feedback);
+  }, [feedback]);
+
+  useEffect(() => {
+    if (!shown) return;
+    const entry = shown;
     const timer = window.setTimeout(() => {
       setShown((current) => (current?.id === entry.id ? null : current));
-    }, 1300);
+    }, ACTION_DURATION);
     return () => window.clearTimeout(timer);
-  }, [feedback]);
+  }, [shown]);
 
   const art = shown ? SPLASH[shown.cue] : undefined;
 
@@ -32,11 +38,20 @@ export function ActionSplash() {
       {shown && art && (
         <motion.div
           key={shown.id}
-          className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
+          className="fixed inset-0 z-40 flex cursor-pointer items-center justify-center"
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar aviso de acción"
+          onClick={() => setShown(null)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setShown(null);
+            }
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          aria-hidden="true"
         >
           <div className="splash-burst absolute inset-0" />
           <motion.div
@@ -58,6 +73,7 @@ export function ActionSplash() {
             <span className="max-w-[80vw] text-center font-display text-sm text-brand-bechamel">
               {shown.message}
             </span>
+            <span className="mt-2 text-xs text-brand-bechamel/70">Toca para continuar</span>
           </motion.div>
         </motion.div>
       )}

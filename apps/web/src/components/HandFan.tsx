@@ -28,7 +28,7 @@ export function HandFan({ hand, selectedIndex, onSelect, isPlayable }: HandFanPr
   const spread = Math.min(8, 46 / Math.max(hand.length, 1));
 
   return (
-    <div className="hand-fan flex shrink-0 items-end justify-center px-2 pb-1 pt-6">
+    <div className="hand-fan relative z-0 flex shrink-0 items-end justify-center px-2 pb-1 pt-6">
       {hand.map((cardId, index) => {
         const offset = index - center;
         const selected = selectedIndex === index;

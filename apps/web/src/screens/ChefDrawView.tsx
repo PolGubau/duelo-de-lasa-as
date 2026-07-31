@@ -91,7 +91,7 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center gap-5 p-6">
+    <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center gap-4 overflow-y-auto p-4 sm:gap-5 sm:p-6">
       <motion.h2
         initial={{ opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
@@ -133,6 +133,7 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
                 key="pack"
                 type="button"
                 onClick={handleDraw}
+                onHoverStart={!opening ? () => playSound("hover") : undefined}
                 disabled={opening}
                 className="relative z-10 h-48 w-32 cursor-pointer overflow-hidden rounded-2xl border-3 border-brand-crust shadow-card"
                 style={{

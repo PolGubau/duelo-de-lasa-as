@@ -1,5 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 import { cn } from "../lib/cn.ts";
+import { playSound, vibrate } from "../lib/sound.ts";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
@@ -18,12 +19,22 @@ export function Button({
   size = "md",
   className,
   disabled,
+  onClick,
+  onMouseEnter,
   ...props
 }: ButtonProps) {
   return (
     <button
       type="button"
       disabled={disabled}
+      onMouseEnter={(event) => {
+        if (!disabled) playSound("hover");
+        onMouseEnter?.(event);
+      }}
+      onClick={(event) => {
+        if (!disabled) vibrate(8);
+        onClick?.(event);
+      }}
       className={cn(
         "font-display rounded-xl border-3 border-brand-crust shadow-button transition-transform duration-100 active:translate-y-1 active:shadow-button-active",
         size === "sm" ? "px-3 py-1 text-xs" : "px-5 py-2.5 text-base",

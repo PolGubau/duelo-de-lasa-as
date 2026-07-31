@@ -29,10 +29,10 @@ export function HomeScreen({
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-brand-table">
+    <div className="relative h-dvh overflow-hidden bg-brand-table">
       <div className="home-backdrop" aria-hidden="true" />
       <IngredientRain />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 p-6">
+      <div className="relative z-10 mx-auto flex h-full max-w-md flex-col items-center justify-center gap-6 overflow-y-auto p-6">
         <div className="text-center">
           <img
             src="/assets/ui/logo_lasana_game.png"
@@ -54,7 +54,7 @@ export function HomeScreen({
         )}
 
         <div className="flex w-full flex-col gap-3">
-          <Button className="py-4 text-xl" onClick={() => open("play")}>
+          <Button className="animate-target py-4 text-xl" onClick={() => open("play")}>
             Jugar
           </Button>
           <Button variant="secondary" className="py-4 text-xl" onClick={() => open("options")}>

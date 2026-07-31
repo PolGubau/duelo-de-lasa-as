@@ -20,6 +20,7 @@ import { ConnectionBanner } from "../components/ConnectionBanner.tsx";
 import { FeedbackToast } from "../components/FeedbackToast.tsx";
 import { Modal } from "../components/Modal.tsx";
 import { roomPath } from "../lib/routes.ts";
+import { playSound, vibrate } from "../lib/sound.ts";
 import { useGameStore } from "../store/gameStore.ts";
 
 interface LobbyViewProps {
@@ -51,14 +52,27 @@ export function LobbyView({ onExit }: LobbyViewProps) {
   }
 
   function copy(value: string, target: Exclude<CopyStatus, "error" | null>): void {
+    vibrate(8);
     if (!navigator.clipboard) {
+      playSound("error");
       showCopyStatus("error");
       return;
     }
     void navigator.clipboard
       .writeText(value)
-      .then(() => showCopyStatus(target))
-      .catch(() => showCopyStatus("error"));
+      .then(() => {
+        playSound("positive");
+        showCopyStatus(target);
+      })
+      .catch(() => {
+        playSound("error");
+        showCopyStatus("error");
+      });
+  }
+
+  function switchTab(tab: "table" | "rules"): void {
+    playSound("select");
+    setMobileTab(tab);
   }
 
   return (
@@ -73,7 +87,16 @@ export function LobbyView({ onExit }: LobbyViewProps) {
             alt="¡Lasaña!"
             className="h-8 w-auto drop-shadow-[0_3px_0_rgba(74,40,16,0.7)] sm:h-10"
           />
-          <button type="button" className="lobby-exit" onClick={onExit} aria-label="Salir de la sala">
+          <button
+            type="button"
+            className="lobby-exit"
+            onClick={() => {
+              playSound("close");
+              vibrate(10);
+              onExit();
+            }}
+            aria-label="Salir de la sala"
+          >
             <LogOut size={16} aria-hidden="true" /> Salir
           </button>
         </header>
@@ -117,7 +140,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
                   role="tab"
                   aria-selected={mobileTab === "table"}
                   className={mobileTab === "table" ? "is-active" : ""}
-                  onClick={() => setMobileTab("table")}
+                  onClick={() => switchTab("table")}
                 >
                   Sala
                 </button>
@@ -126,7 +149,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
                   role="tab"
                   aria-selected={mobileTab === "rules"}
                   className={mobileTab === "rules" ? "is-active" : ""}
-                  onClick={() => setMobileTab("rules")}
+                  onClick={() => switchTab("rules")}
                 >
                   Reglas
                 </button>

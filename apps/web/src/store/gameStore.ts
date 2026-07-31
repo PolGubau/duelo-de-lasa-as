@@ -82,7 +82,7 @@ export const useGameStore = create<GameStore>((set, get) => {
     set({ feedback: { id, message, cue } });
     window.setTimeout(() => {
       if (get().feedback?.id === id) set({ feedback: null });
-    }, 1800);
+    }, 3200);
   }
 
   function notifyError(message: string): void {

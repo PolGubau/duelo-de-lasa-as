@@ -109,7 +109,7 @@ export function HandArea({ state }: HandAreaProps) {
         }}
       />
 
-      <div className="flex min-h-13 w-full items-center justify-center gap-2 px-2 pb-2">
+      <div className="relative z-40 flex min-h-13 w-full items-center justify-center gap-2 px-2 pb-2">
         <AnimatePresence mode="popLayout" initial={false}>
           {actions.length === 0 ? (
             <motion.p

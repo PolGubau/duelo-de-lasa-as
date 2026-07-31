@@ -1,4 +1,4 @@
-import type { LayerEvent } from "@lasana/engine";
+import { getCard, type LayerEvent } from "@lasana/engine";
 import { motion } from "framer-motion";
 import { cn } from "../lib/cn.ts";
 
@@ -11,10 +11,18 @@ interface LasagnaStack3DProps {
   hidden?: boolean;
 }
 
-function slabColor(layer: LayerEvent): string {
-  if (layer.origin === "opponent") return "var(--color-brand-tomato)";
-  if (layer.op === "multiply") return "var(--color-brand-cheese)";
-  return "var(--color-brand-basil)";
+type LayerLook = "pasta" | "bechamel" | "filling" | "condiment" | "opponent";
+
+/** Da a cada carta una capa reconocible de lasaña, no solo un color por puntuación. */
+function layerLook(layer: LayerEvent): LayerLook {
+  if (layer.origin === "opponent") return "opponent";
+  const card = getCard(layer.cardId);
+  if (card.kind === "ingredient") {
+    if (card.subtype === "pasta") return "pasta";
+    if (card.subtype === "bechamel") return "bechamel";
+    return "filling";
+  }
+  return "condiment";
 }
 
 /** Torre de lasaña vista en perspectiva: cada capa es una loncha apilada. */
@@ -24,29 +32,36 @@ export function LasagnaStack3D({
   width = 130,
   hidden,
 }: LasagnaStack3DProps) {
-  const overlap = slabHeight * 0.55;
+  const overlap = slabHeight * 0.62;
+  const baseOffset = slabHeight * 0.32;
 
   return (
     <div
-      className="relative"
-      style={{ width, height: Math.max(slabHeight * 1.6, layers.length * overlap + slabHeight) }}
+      className="lasagna-stack relative isolate"
+      style={{ width, height: Math.max(slabHeight * 1.7, layers.length * overlap + slabHeight) }}
     >
+      <div
+        aria-hidden="true"
+        className="lasagna-plate absolute inset-x-[-5%]"
+        style={{ bottom: 0, height: slabHeight * 0.8 }}
+      />
       {layers.length === 0 && (
         <div
-          className="absolute inset-x-0 bottom-0 rounded-full border-2 border-dashed border-brand-bechamel/30"
-          style={{ height: slabHeight }}
+          className="lasagna-empty absolute inset-x-[3%] border-2 border-dashed border-brand-bechamel/35"
+          style={{ bottom: baseOffset, height: slabHeight }}
         />
       )}
       {layers.map((layer, i) => (
         <motion.div
           key={`${layer.cardId}_${i}`}
           className={cn(
-            "layer-slab absolute inset-x-0 flex items-center justify-between border-2 border-brand-crust px-1.5",
+            "lasagna-layer absolute inset-x-0 flex items-center justify-between px-1.5",
+            `is-${hidden ? "hidden" : layerLook(layer)}`,
+            i === layers.length - 1 && "is-top-layer",
           )}
           style={{
-            bottom: i * overlap,
+            bottom: baseOffset + i * overlap,
             height: slabHeight,
-            background: slabColor(layer),
             zIndex: i + 1,
           }}
           initial={{ opacity: 0, y: -40, rotateZ: -6, scaleX: 1.2 }}
@@ -55,10 +70,10 @@ export function LasagnaStack3D({
         >
           {!hidden && (
             <>
-              <span className="truncate text-[9px] font-bold leading-none text-brand-crust">
+              <span className="relative z-10 truncate text-[9px] font-bold leading-none text-brand-crust">
                 {layer.cardName}
               </span>
-              <span className="shrink-0 font-display text-[10px] leading-none text-brand-crust">
+              <span className="relative z-10 shrink-0 font-display text-[10px] leading-none text-brand-crust">
                 {layer.op === "multiply" ? "×" : layer.value >= 0 ? "+" : ""}
                 {layer.value}
               </span>

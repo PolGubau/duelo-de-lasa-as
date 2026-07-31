@@ -148,6 +148,7 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
   const [throwing, setThrowing] = useState(false);
   const [learned, setLearned] = useState<Set<string>>(new Set());
   const [splash, setSplash] = useState<Splash | null>(null);
+  const [dismissedGuide, setDismissedGuide] = useState<string | null>(null);
   const prevStatus = useRef(state.status);
 
   const me = state.players.find((player) => player.id === ME)!;
@@ -198,6 +199,8 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
   }, [state.status, state.players, state.winnerId]);
 
   const guide = guideFor(state, learned, myTurn);
+  const guideKey = `${guide.title}_${guide.body}`;
+  const showGuide = dismissedGuide !== guideKey;
   const phase = currentPhase(state);
   const selectedCard = selectedId ? getCard(selectedId) : undefined;
   const canPlayIngredient =
@@ -335,20 +338,30 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
-          key={`${guide.title}_${guide.body}`}
-          initial={{ opacity: 0, y: -12, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ type: "spring", stiffness: 380, damping: 28 }}
-          className="mx-3 mb-1 flex shrink-0 items-start gap-2 rounded-2xl border-3 border-brand-cheese bg-brand-table/90 px-3 py-2 shadow-card"
-        >
-          <span className="text-2xl leading-none">{guide.icon}</span>
-          <div className="flex flex-col">
-            <span className="font-display text-sm text-brand-cheese">{guide.title}</span>
-            <span className="text-xs text-brand-bechamel/90">{guide.body}</span>
-          </div>
-        </motion.div>
+        {showGuide && (
+          <motion.div
+            key={guideKey}
+            initial={{ opacity: 0, y: -12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.98 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+            className="mx-3 mb-1 flex shrink-0 items-start gap-2 rounded-2xl border-3 border-brand-cheese bg-brand-table/90 px-3 py-2 shadow-card"
+          >
+            <span className="text-2xl leading-none">{guide.icon}</span>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="font-display text-sm text-brand-cheese">{guide.title}</span>
+              <span className="text-pretty text-xs text-brand-bechamel/90">{guide.body}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDismissedGuide(guideKey)}
+              aria-label={`Cerrar ayuda: ${guide.title}`}
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-brand-bechamel/25 text-lg leading-none text-brand-bechamel/75 transition-colors hover:bg-brand-bechamel/15 hover:text-brand-bechamel focus-visible:outline-3 focus-visible:outline-brand-basil"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <TableStage
@@ -386,7 +399,7 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
             <>
               <div
                 className={cn(
-                  "rounded-3xl",
+                  "relative z-0 rounded-3xl",
                   guide.highlight === "hand" && "animate-target ring-4 ring-brand-cheese",
                 )}
               >
@@ -403,7 +416,7 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
                   }}
                 />
               </div>
-              <div className="flex min-h-13 w-full flex-wrap items-center justify-center gap-2 px-2 pb-2">
+              <div className="relative z-40 flex min-h-13 w-full flex-wrap items-center justify-center gap-2 px-2 pb-2">
                 <AnimatePresence mode="popLayout" initial={false}>
                   {actions.length === 0 ? (
                     <motion.p

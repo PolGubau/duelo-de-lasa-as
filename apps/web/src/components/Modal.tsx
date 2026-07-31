@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 import { FocusScope, useDialog, useModalOverlay } from "react-aria";
+import { createPortal } from "react-dom";
 import { useOverlayTriggerState } from "react-stately";
 import { playSound } from "../lib/sound.ts";
 
@@ -31,7 +32,9 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const { dialogProps, titleProps } = useDialog({}, dialogRef);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -58,9 +61,9 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
                   </h2>
                   <button
                     type="button"
-                    onClick={onClose}
+                    onClick={state.close}
                     aria-label="Cerrar"
-                    className="cursor-pointer rounded-lg px-2 text-brand-bechamel/70 hover:text-brand-bechamel"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border-2 border-brand-bechamel/25 text-xl leading-none text-brand-bechamel/75 transition-colors hover:bg-brand-bechamel/15 hover:text-brand-bechamel focus-visible:outline-3 focus-visible:outline-brand-basil"
                   >
                     ✕
                   </button>
@@ -71,6 +74,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }

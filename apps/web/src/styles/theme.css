@@ -444,13 +444,101 @@ body {
   transform-style: preserve-3d;
 }
 
-/* Cada capa de la torre se dibuja como una loncha con grosor. */
-.layer-slab {
+/* --- Lasaña: capas comestibles, no bloques de color --------------------- */
+
+.lasagna-stack {
+  filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.28));
+}
+
+.lasagna-plate {
+  z-index: 0;
+  border: 2px solid rgba(248, 249, 250, 0.65);
+  border-radius: 50%;
+  background: #dce8ee;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 3px 0 rgba(5, 17, 31, 0.3);
+}
+
+.lasagna-empty {
+  border-radius: 50%;
+  background: rgba(248, 249, 250, 0.08);
+}
+
+.lasagna-layer {
   transform-style: preserve-3d;
-  border-radius: 0.4rem;
+  overflow: hidden;
+  border: 1.5px solid var(--color-brand-crust);
+  border-radius: 36% 43% 28% 34% / 38% 32% 42% 35%;
   box-shadow:
-    0 2px 0 rgba(0, 0, 0, 0.35),
-    0 6px 12px rgba(0, 0, 0, 0.3);
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 2px 0 rgba(74, 40, 16, 0.72),
+    0 5px 9px rgba(0, 0, 0, 0.24);
+  text-shadow: 0 1px 0 rgba(248, 249, 250, 0.38);
+}
+
+.lasagna-layer::before {
+  position: absolute;
+  inset: 1px 5%;
+  border-radius: inherit;
+  content: "";
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.lasagna-layer.is-pasta {
+  background-color: #e7b75c;
+}
+
+.lasagna-layer.is-pasta::before {
+  background: repeating-linear-gradient(90deg, rgba(123, 79, 24, 0.28) 0 1px, transparent 1px 6px);
+}
+
+.lasagna-layer.is-bechamel {
+  background-color: #f5e8c7;
+}
+
+.lasagna-layer.is-bechamel::before {
+  background-image: radial-gradient(rgba(205, 174, 108, 0.45) 0 1px, transparent 1.5px);
+  background-size: 7px 5px;
+}
+
+.lasagna-layer.is-filling {
+  background-color: #b84d38;
+}
+
+.lasagna-layer.is-filling::before {
+  background: repeating-linear-gradient(135deg, rgba(77, 95, 37, 0.72) 0 2px, transparent 2px 8px);
+}
+
+.lasagna-layer.is-condiment {
+  background-color: #d79a3e;
+}
+
+.lasagna-layer.is-condiment::before {
+  background-image: radial-gradient(rgba(112, 61, 20, 0.64) 0 1px, transparent 1.8px);
+  background-size: 6px 6px;
+}
+
+.lasagna-layer.is-opponent {
+  background-color: #d94242;
+}
+
+.lasagna-layer.is-opponent::before {
+  background: repeating-linear-gradient(-35deg, rgba(93, 19, 19, 0.46) 0 2px, transparent 2px 7px);
+}
+
+.lasagna-layer.is-hidden {
+  background-color: #9b7142;
+}
+
+.lasagna-layer.is-hidden::before {
+  background: repeating-linear-gradient(90deg, rgba(74, 40, 16, 0.45) 0 1px, transparent 1px 5px);
+}
+
+.lasagna-layer.is-top-layer {
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    0 2px 0 rgba(74, 40, 16, 0.72),
+    0 5px 9px rgba(0, 0, 0, 0.24);
 }
 
 /* --- Mano en abanico ---------------------------------------------------- */
@@ -606,15 +694,6 @@ body {
   font-size: 0.78rem;
   line-height: 1.2;
   pointer-events: none;
-}
-
-.feedback-toast::before {
-  position: absolute;
-  inset: 0.18rem 0.25rem auto;
-  height: 0.18rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  content: "";
 }
 
 .feedback-toast>span:first-child {

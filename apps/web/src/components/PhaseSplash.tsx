@@ -7,6 +7,8 @@ import { playSound } from "../lib/sound.ts";
 
 /** Veces que se explica cada fase antes de mostrar solo el rótulo. */
 const EXPLAIN_TIMES = 2;
+const EXPLAIN_DURATION = 5000;
+const LABEL_DURATION = 2600;
 const seen = new Map<string, number>();
 
 interface PhaseSplashProps {
@@ -37,7 +39,7 @@ export function PhaseSplash({ state }: PhaseSplashProps) {
     setShown(entry);
     const timer = window.setTimeout(
       () => setShown((current) => (current?.key === entry.key ? null : current)),
-      entry.explain ? 2600 : 1400,
+      entry.explain ? EXPLAIN_DURATION : LABEL_DURATION,
     );
     return () => window.clearTimeout(timer);
   }, [key, state]);
@@ -47,11 +49,20 @@ export function PhaseSplash({ state }: PhaseSplashProps) {
       {shown && (
         <motion.div
           key={shown.key}
-          className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center px-6"
+          className="fixed inset-0 z-40 flex cursor-pointer items-center justify-center px-6"
+          role="button"
+          tabIndex={0}
+          aria-label="Cerrar aviso de fase"
+          onClick={() => setShown(null)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setShown(null);
+            }
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          aria-hidden="true"
         >
           <div className="absolute inset-0 bg-black/45" />
           <motion.div
@@ -76,8 +87,9 @@ export function PhaseSplash({ state }: PhaseSplashProps) {
               {shown.info.label}
             </span>
             {shown.explain && (
-              <p className="text-center text-sm text-brand-bechamel/90">{shown.info.help}</p>
+              <p className="text-center text-pretty text-sm text-brand-bechamel/90">{shown.info.help}</p>
             )}
+            <span className="mt-2 text-xs text-brand-bechamel/60">Toca para continuar</span>
           </motion.div>
         </motion.div>
       )}
