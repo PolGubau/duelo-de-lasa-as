@@ -8,10 +8,18 @@ import { PlayDialog } from "./PlayDialog.tsx";
 
 interface HomeScreenProps {
   onTutorial: () => void;
+  onRoomSelected: (code: string) => void;
+  initialRoomCode?: string;
+  onRoomJoinDismiss?: () => void;
 }
 
-export function HomeScreen({ onTutorial }: HomeScreenProps) {
-  const [dialog, setDialog] = useState<"play" | "options" | null>(null);
+export function HomeScreen({
+  onTutorial,
+  onRoomSelected,
+  initialRoomCode,
+  onRoomJoinDismiss,
+}: HomeScreenProps) {
+  const [dialog, setDialog] = useState<"play" | "options" | null>(initialRoomCode ? "play" : null);
   const { canInstall, install } = useInstallPrompt();
 
   function open(next: "play" | "options"): void {
@@ -64,7 +72,15 @@ export function HomeScreen({ onTutorial }: HomeScreenProps) {
           </Button>
         </div>
 
-        <PlayDialog open={dialog === "play"} onClose={() => setDialog(null)} />
+        <PlayDialog
+          open={dialog === "play"}
+          initialRoomCode={initialRoomCode}
+          onRoomSelected={onRoomSelected}
+          onClose={() => {
+            setDialog(null);
+            onRoomJoinDismiss?.();
+          }}
+        />
         <OptionsDialog open={dialog === "options"} onClose={() => setDialog(null)} />
       </div>
     </div>

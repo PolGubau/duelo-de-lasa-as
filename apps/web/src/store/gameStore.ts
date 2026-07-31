@@ -22,8 +22,9 @@ interface GameStore {
   pendingThrowCardId: string | null;
   feedback: Feedback | null;
   chat: ChatEntry[];
+  pendingVisibility: RoomOptions["visibility"] | null;
 
-  createRoom: (name: string) => void;
+  createRoom: (name: string) => string;
   joinRoom: (code: string, name: string) => void;
   toggleReady: () => void;
   setVisibility: (visibility: RoomOptions["visibility"]) => void;
@@ -130,7 +131,21 @@ export const useGameStore = create<GameStore>((set, get) => {
         )
           send({ type: "options", options: { visibility: preferred } });
       } else if (message.type === "room") {
-        set({ room: message.room, connection: "connected" });
+        const pendingVisibility = get().pendingVisibility;
+        set({
+          room: message.room,
+          connection: "connected",
+          pendingVisibility:
+            pendingVisibility === message.room.options.visibility ? null : pendingVisibility,
+        });
+        if (pendingVisibility === message.room.options.visibility) {
+          announce(
+            message.room.options.visibility === "public"
+              ? "Mesa visible para todos"
+              : "Lasaña oculta: modo secreto",
+            "positive",
+          );
+        }
       } else if (message.type === "chat") {
         playSound("select");
         set({ chat: [...get().chat, message.entry].slice(-20) });
@@ -141,10 +156,10 @@ export const useGameStore = create<GameStore>((set, get) => {
         });
         if (message.event) announce(message.event.message, cueFor(message.event.kind));
       } else if (message.type === "rejected") {
-        set({ error: message.reason });
+        set({ error: message.reason, pendingVisibility: null });
         playSound("error");
       } else if (message.type === "error") {
-        set({ error: message.message, connection: "error" });
+        set({ error: message.message, connection: "error", pendingVisibility: null });
         playSound("error");
       }
     };
@@ -195,13 +210,25 @@ export const useGameStore = create<GameStore>((set, get) => {
     pendingThrowCardId: null,
     feedback: null,
     chat: [],
-    createRoom: (name) => connect(roomCode(), name),
+    pendingVisibility: null,
+    createRoom: (name) => {
+      const code = roomCode();
+      connect(code, name);
+      return code;
+    },
     joinRoom: (code, name) => connect(code.trim().toUpperCase(), name),
     toggleReady: () => {
       const me = get().room?.players.find((player) => player.id === get().sessionId);
       send({ type: "ready", ready: !me?.ready });
     },
-    setVisibility: (visibility) => send({ type: "options", options: { visibility } }),
+    setVisibility: (visibility) => {
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        send({ type: "options", options: { visibility } });
+        return;
+      }
+      set({ pendingVisibility: visibility });
+      send({ type: "options", options: { visibility } });
+    },
     sendChat: (emoji) => send({ type: "chat", emoji }),
     startRoom: () => send({ type: "start" }),
     leaveRoom: () => {
@@ -212,6 +239,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         sessionId: null,
         connection: "idle",
         pendingThrowCardId: null,
+        pendingVisibility: null,
         chat: [],
       });
     },
@@ -223,6 +251,7 @@ export const useGameStore = create<GameStore>((set, get) => {
         sessionId: null,
         connection: "idle",
         pendingThrowCardId: null,
+        pendingVisibility: null,
         feedback: null,
         chat: [],
       });

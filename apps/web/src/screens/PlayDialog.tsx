@@ -1,28 +1,27 @@
 import { useEffect, useState } from "react";
 import { Button } from "../components/Button.tsx";
 import { Modal } from "../components/Modal.tsx";
+import { isRoomCode } from "../lib/routes.ts";
 import { useGameStore } from "../store/gameStore.ts";
 
 interface PlayDialogProps {
   open: boolean;
   onClose: () => void;
+  initialRoomCode?: string;
+  onRoomSelected: (code: string) => void;
 }
 
-/** Código de sala precargado cuando se entra por un enlace de invitación. */
-function codeFromUrl(): string {
-  if (typeof window === "undefined") return "";
-  return (new URL(window.location.href).searchParams.get("sala") ?? "").toUpperCase().slice(0, 4);
-}
-
-export function PlayDialog({ open, onClose }: PlayDialogProps) {
+export function PlayDialog({ open, onClose, initialRoomCode, onRoomSelected }: PlayDialogProps) {
   const [name, setName] = useState(() => window.localStorage.getItem("lasana-player-name") ?? "");
-  const [code, setCode] = useState(codeFromUrl);
+  const [code, setCode] = useState(initialRoomCode ?? "");
   const [pendingAction, setPendingAction] = useState<"create" | "join" | null>(null);
   const createRoom = useGameStore((s) => s.createRoom);
   const joinRoom = useGameStore((s) => s.joinRoom);
   const error = useGameStore((s) => s.error);
   const connection = useGameStore((s) => s.connection);
   const validName = name.trim().length >= 2;
+  const normalizedCode = code.trim().toUpperCase();
+  const validCode = isRoomCode(normalizedCode);
   const isCreating = pendingAction === "create" && connection === "connecting";
   const isJoining = pendingAction === "join" && connection === "connecting";
 
@@ -33,6 +32,9 @@ export function PlayDialog({ open, onClose }: PlayDialogProps) {
   useEffect(() => {
     if (!open) setPendingAction(null);
   }, [open]);
+  useEffect(() => {
+    if (initialRoomCode) setCode(initialRoomCode);
+  }, [initialRoomCode]);
 
   function remember(): void {
     window.localStorage.setItem("lasana-player-name", name.trim());
@@ -54,7 +56,7 @@ export function PlayDialog({ open, onClose }: PlayDialogProps) {
           onClick={() => {
             remember();
             setPendingAction("create");
-            createRoom(name);
+            onRoomSelected(createRoom(name));
           }}
         >
           {isCreating ? (
@@ -79,11 +81,12 @@ export function PlayDialog({ open, onClose }: PlayDialogProps) {
             />
             <Button
               variant="secondary"
-              disabled={!validName || code.length !== 4 || isCreating || isJoining}
+              disabled={!validName || !validCode || isCreating || isJoining}
               onClick={() => {
                 remember();
                 setPendingAction("join");
-                joinRoom(code, name);
+                joinRoom(normalizedCode, name);
+                onRoomSelected(normalizedCode);
               }}
             >
               {isJoining ? "Uniendo…" : "Unirse"}

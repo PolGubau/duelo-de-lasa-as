@@ -9,7 +9,11 @@ import { PlayingView } from "./PlayingView.tsx";
 import { ScoringView } from "./ScoringView.tsx";
 import { TradingView } from "./TradingView.tsx";
 
-export function GameScreen() {
+interface GameScreenProps {
+  onExit: () => void;
+}
+
+export function GameScreen({ onExit }: GameScreenProps) {
   const state = useGameStore((s) => s.state)!;
   const error = useGameStore((s) => s.error);
   const clearError = useGameStore((s) => s.clearError);
@@ -39,7 +43,7 @@ export function GameScreen() {
       {state.status === "chefDraw" && <ChefDrawView state={state} />}
       {state.status === "trading" && <TradingView state={state} />}
       {state.status === "scoring" && <ScoringView state={state} />}
-      {state.status === "finished" && <FinishedView state={state} />}
+      {state.status === "finished" && <FinishedView state={state} onExit={onExit} />}
     </motion.div>
   );
 }

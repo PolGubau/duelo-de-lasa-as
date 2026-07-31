@@ -2,14 +2,12 @@ import type { GameState } from "@lasana/engine";
 import { scoreGame } from "@lasana/engine";
 import { Button } from "../components/Button.tsx";
 import { ScoreBreakdown } from "../components/ScoreBreakdown.tsx";
-import { useGameStore } from "../store/gameStore.ts";
-
 interface FinishedViewProps {
   state: GameState;
+  onExit: () => void;
 }
 
-export function FinishedView({ state }: FinishedViewProps) {
-  const resetGame = useGameStore((s) => s.resetGame);
+export function FinishedView({ state, onExit }: FinishedViewProps) {
   const scores = scoreGame(state);
   const winner = state.players.find((p) => p.id === state.winnerId);
 
@@ -33,7 +31,7 @@ export function FinishedView({ state }: FinishedViewProps) {
             />
           ))}
       </div>
-      <Button variant="primary" onClick={resetGame}>
+      <Button variant="primary" onClick={onExit}>
         Jugar de nuevo
       </Button>
     </div>

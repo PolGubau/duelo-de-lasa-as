@@ -8,6 +8,7 @@ const ICONS: Record<string, string> = {
   chef: "👨‍🍳",
   win: "🏆",
   score: "✨",
+  positive: "✅",
 };
 
 export function FeedbackToast() {

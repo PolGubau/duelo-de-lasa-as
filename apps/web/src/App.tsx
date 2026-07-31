@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "./components/Button.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
+import { roomPath, useAppRouter } from "./lib/routes.ts";
 import { startMusic } from "./lib/sound.ts";
 import { GameScreen } from "./screens/GameScreen.tsx";
 import { HomeScreen } from "./screens/HomeScreen.tsx";
@@ -8,12 +10,85 @@ import { SplashScreen } from "./screens/SplashScreen.tsx";
 import { TutorialScreen } from "./screens/TutorialScreen.tsx";
 import { useGameStore } from "./store/gameStore.ts";
 
-export default function App() {
+interface RoomRouteProps {
+  code: string;
+  onExit: () => void;
+  onRoomSelected: (code: string) => void;
+}
+
+function RoomRoute({ code, onExit, onRoomSelected }: RoomRouteProps) {
   const state = useGameStore((s) => s.state);
   const room = useGameStore((s) => s.room);
+  const connection = useGameStore((s) => s.connection);
+  const joinRoom = useGameStore((s) => s.joinRoom);
+  const attemptedCode = useRef<string | null>(null);
+  const name = window.localStorage.getItem("lasana-player-name")?.trim();
+  const hasExpectedRoom = room?.code === code;
+
+  useEffect(() => {
+    if (!name || hasExpectedRoom || connection === "connecting" || attemptedCode.current === code)
+      return;
+    attemptedCode.current = code;
+    joinRoom(code, name);
+  }, [code, connection, hasExpectedRoom, joinRoom, name]);
+
+  if (!name)
+    return (
+      <HomeScreen
+        initialRoomCode={code}
+        onRoomSelected={onRoomSelected}
+        onRoomJoinDismiss={onExit}
+        onTutorial={onExit}
+      />
+    );
+
+  if (hasExpectedRoom && state)
+    return (
+      <ErrorBoundary key="game" title="¡Se nos quemó la partida!" onReset={onExit}>
+        <GameScreen onExit={onExit} />
+      </ErrorBoundary>
+    );
+
+  if (hasExpectedRoom)
+    return (
+      <ErrorBoundary key="lobby" title="¡Se nos cayó la sala!" onReset={onExit}>
+        <LobbyView onExit={onExit} />
+      </ErrorBoundary>
+    );
+
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
+      <span className="text-5xl" aria-hidden="true">
+        🍝
+      </span>
+      <h1 className="font-display text-2xl text-brand-cheese">Entrando en la sala {code}</h1>
+      <p className="text-sm text-brand-bechamel/80">
+        {connection === "error" ? "No hemos podido abrir la sala." : "Conectando con tus rivales…"}
+      </p>
+      {connection === "error" && (
+        <Button variant="secondary" onClick={onExit}>
+          Volver al inicio
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export default function App() {
   const resetGame = useGameStore((s) => s.resetGame);
-  const [tutorial, setTutorial] = useState(false);
+  const leaveRoom = useGameStore((s) => s.leaveRoom);
+  const [route, navigate] = useAppRouter();
   const [splashPhase, setSplashPhase] = useState<"enter" | "exit" | "done">("enter");
+
+  function goHome(): void {
+    leaveRoom();
+    resetGame();
+    navigate("/", true);
+  }
+
+  function selectRoom(code: string): void {
+    navigate(roomPath(code));
+  }
 
   useEffect(() => {
     const exitTimer = window.setTimeout(() => setSplashPhase("exit"), 900);
@@ -28,6 +103,14 @@ export default function App() {
       window.clearTimeout(finishTimer);
     };
   }, []);
+
+  useEffect(() => {
+    if (route.kind === "room") {
+      if (route.legacy) navigate(roomPath(route.code), true);
+      return;
+    }
+    leaveRoom();
+  }, [leaveRoom, navigate, route]);
 
   /**
    * Los navegadores bloquean el audio hasta el primer gesto del usuario, así
@@ -52,25 +135,20 @@ export default function App() {
     <div className="min-h-screen bg-brand-table">
       {splashPhase !== "done" ? (
         <SplashScreen phase={splashPhase} />
-      ) : state ? (
-        <ErrorBoundary key="game" title="¡Se nos quemó la partida!" onReset={resetGame}>
-          <GameScreen />
+      ) : route.kind === "room" ? (
+        <RoomRoute code={route.code} onExit={goHome} onRoomSelected={selectRoom} />
+      ) : route.kind === "tutorial" ? (
+        <ErrorBoundary key="tutorial" title="¡Se nos quemó el tutorial!" onReset={goHome}>
+          <TutorialScreen onExit={goHome} />
         </ErrorBoundary>
-      ) : room ? (
-        <ErrorBoundary key="lobby" title="¡Se nos cayó la sala!" onReset={resetGame}>
-          <LobbyView />
-        </ErrorBoundary>
-      ) : tutorial ? (
-        <ErrorBoundary
-          key="tutorial"
-          title="¡Se nos quemó el tutorial!"
-          onReset={() => setTutorial(false)}
-        >
-          <TutorialScreen onExit={() => setTutorial(false)} />
-        </ErrorBoundary>
+      ) : route.kind === "notFound" ? (
+        <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center">
+          <h1 className="font-display text-3xl text-brand-cheese">Esta receta no existe</h1>
+          <Button onClick={goHome}>Volver al inicio</Button>
+        </div>
       ) : (
         <ErrorBoundary key="home" title="¡Algo salió mal!">
-          <HomeScreen onTutorial={() => setTutorial(true)} />
+          <HomeScreen onRoomSelected={selectRoom} onTutorial={() => navigate("/tutorial")} />
         </ErrorBoundary>
       )}
     </div>

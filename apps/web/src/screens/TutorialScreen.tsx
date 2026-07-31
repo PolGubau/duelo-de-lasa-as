@@ -14,14 +14,18 @@ import {
   playIngredient,
   scoreGame,
 } from "@lasana/engine";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../components/Button.tsx";
-import { CardView } from "../components/CardView.tsx";
-import { PlayerPanel } from "../components/PlayerPanel.tsx";
+import { HandFan } from "../components/HandFan.tsx";
+import { PhaseHeader } from "../components/PhaseHeader.tsx";
+import { PhaseSplash } from "../components/PhaseSplash.tsx";
 import { ScoreBreakdown } from "../components/ScoreBreakdown.tsx";
+import { TableStage } from "../components/TableStage.tsx";
 import { playBotTurn } from "../lib/bot.ts";
-import { runningTotal } from "../lib/layers.ts";
-import { playSound } from "../lib/sound.ts";
+import { cn } from "../lib/cn.ts";
+import { phaseInfoFor } from "../lib/phases.ts";
+import { playSound, vibrate } from "../lib/sound.ts";
 
 const ME = "tutorial_me";
 const BOT = "tutorial_bot";
@@ -36,32 +40,140 @@ function newGame(): GameState {
   );
 }
 
-/** Pista contextual: explica la regla que toca aprender en cada momento. */
-function hintFor(state: GameState): string {
-  if (state.status === "chefDraw")
-    return "Cada jugador roba un Chef: su efecto se aplica al final.";
-  if (state.status === "trading")
-    return "Puedes intercambiar chefs con un rival. Aquí lo saltamos y pasamos a puntuar.";
-  if (state.status === "scoring")
-    return "La lasaña se calcula de abajo arriba: las sumas y multiplicadores se aplican en orden.";
-  if (state.status === "finished") return "¡Fin del tutorial! Ya puedes jugar online.";
-  if (currentPlayer(state).id === BOT) return "El Chef Bot está jugando su turno…";
-  if (!state.hasPlayedIngredientThisTurn)
-    return `Fase ${currentPhase(state)}: solo puedes colocar ingredientes de ese tipo. Si no tienes, descarta y roba.`;
-  return "Los condimentos suman a tu lasaña o se lanzan al rival para estropear la suya. Luego termina el turno.";
+interface Guide {
+  icon: string;
+  title: string;
+  body: string;
+  highlight?: "hand" | "useSelf" | "throw" | "discard" | "endTurn";
+}
+
+/** Guía contextual: qué explicar según lo que el jugador ya ha aprendido a hacer. */
+function guideFor(state: GameState, learned: Set<string>, myTurn: boolean): Guide {
+  if (state.status === "finished") {
+    return {
+      icon: "🎉",
+      title: "¡Tutorial completo!",
+      body: "Ya conoces fases, condimentos, chefs y puntuación. ¡A jugar de verdad!",
+    };
+  }
+  if (state.status === "scoring") {
+    return {
+      icon: "🧮",
+      title: "Puntuación",
+      body: "La lasaña se calcula de abajo arriba: cada capa suma o multiplica sobre el total. El Chef aplica su efecto al final.",
+    };
+  }
+  if (state.status === "trading") {
+    return {
+      icon: "🤝",
+      title: "Trueque de Chefs",
+      body: "Podéis proponer intercambiar chefs si no os convence el vuestro. Aquí lo saltamos directos a puntuar.",
+    };
+  }
+  if (state.status === "chefDraw") {
+    return {
+      icon: "👨‍🍳",
+      title: "Reparto de Chefs",
+      body: "Cada jugador roba un chef al azar; su efecto especial se suma al calcular la puntuación final.",
+    };
+  }
+  if (!myTurn) {
+    return {
+      icon: "🤖",
+      title: `Turno de ${currentPlayer(state).name}`,
+      body: "Observa cómo juega la máquina; enseguida vuelve tu turno.",
+    };
+  }
+  const phase = currentPhase(state);
+  if (!learned.has("ingredient")) {
+    return {
+      icon: phaseInfoFor(state.status, phase).icon,
+      title: `Fase de ${phase}`,
+      body: `Solo puedes colocar ingredientes de tipo "${phase}" en esta fase. Toca una carta resaltada y pulsa "Poner en mi lasaña".`,
+      highlight: "hand",
+    };
+  }
+  if (!learned.has("condiment_self")) {
+    return {
+      icon: "🧂",
+      title: "Condimentos: para tu lasaña",
+      body: "Si tienes un condimento, puedes usarlo en tu propia lasaña para sumar (o multiplicar) puntos extra.",
+      highlight: "useSelf",
+    };
+  }
+  if (!learned.has("condiment_throw")) {
+    return {
+      icon: "🎯",
+      title: "Condimentos: al rival",
+      body: 'Otros condimentos se lanzan a la lasaña de un rival para estropearla. Selecciona uno y pulsa "Lanzar a un rival".',
+      highlight: "throw",
+    };
+  }
+  if (!learned.has("discard")) {
+    return {
+      icon: "🔄",
+      title: "¿Sin cartas útiles?",
+      body: "Descarta una carta y roba otra del mazo si ninguna te sirve ahora mismo.",
+      highlight: "discard",
+    };
+  }
+  return {
+    icon: "⏭️",
+    title: "Termina tu turno",
+    body: 'Cuando ya no quieras jugar más cartas, pulsa "Terminar turno" para pasar el turno.',
+    highlight: "endTurn",
+  };
+}
+
+const MILESTONES: { key: string; icon: string; label: string }[] = [
+  { key: "ingredient", icon: "🥘", label: "Ingrediente" },
+  { key: "condiment_self", icon: "🧂", label: "Condimento" },
+  { key: "condiment_throw", icon: "🎯", label: "Lanzar" },
+  { key: "discard", icon: "🔄", label: "Descarte" },
+  { key: "chef", icon: "👨‍🍳", label: "Chef" },
+  { key: "score", icon: "🧮", label: "Puntos" },
+];
+
+interface Splash {
+  id: number;
+  icon: string;
+  title: string;
+  message: string;
+  color: string;
 }
 
 export function TutorialScreen({ onExit }: { onExit: () => void }) {
   const [state, setState] = useState<GameState>(newGame);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [throwing, setThrowing] = useState(false);
+  const [learned, setLearned] = useState<Set<string>>(new Set());
+  const [splash, setSplash] = useState<Splash | null>(null);
+  const prevStatus = useRef(state.status);
 
-  function apply(result: ActionResult): void {
+  const me = state.players.find((player) => player.id === ME)!;
+  const selectedId = selectedIndex !== null ? me.hand[selectedIndex] : undefined;
+  const myTurn = state.status === "playing" && currentPlayer(state).id === ME;
+
+  function fireSplash(icon: string, title: string, message: string, color: string): void {
+    const id = Date.now();
+    setSplash({ id, icon, title, message, color });
+    playSound("splash");
+    window.setTimeout(() => setSplash((current) => (current?.id === id ? null : current)), 1300);
+  }
+
+  function learn(key: string): void {
+    setLearned((prev) => (prev.has(key) ? prev : new Set(prev).add(key)));
+  }
+
+  function apply(result: ActionResult, milestone?: string): void {
     if (result.ok) {
       setState(result.state);
       playSound("play");
-    } else playSound("error");
-    setSelected(null);
+      if (milestone) learn(milestone);
+    } else {
+      playSound("error");
+    }
+    setSelectedIndex(null);
     setThrowing(false);
   }
 
@@ -71,110 +183,313 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
     return () => window.clearTimeout(timer);
   }, [state]);
 
-  const me = state.players.find((player) => player.id === ME)!;
-  const card = selected ? getCard(selected) : undefined;
-  const myTurn = state.status === "playing" && currentPlayer(state).id === ME;
+  useEffect(() => {
+    if (prevStatus.current !== "finished" && state.status === "finished") {
+      const winner = state.players.find((p) => p.id === state.winnerId);
+      fireSplash(
+        "🏆",
+        "¡Victoria!",
+        `${winner?.name ?? "Nadie"} gana la partida`,
+        "var(--color-brand-cheese)",
+      );
+    }
+    prevStatus.current = state.status;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.status, state.players, state.winnerId]);
+
+  const guide = guideFor(state, learned, myTurn);
+  const phase = currentPhase(state);
+  const selectedCard = selectedId ? getCard(selectedId) : undefined;
+  const canPlayIngredient =
+    selectedCard?.kind === "ingredient" &&
+    selectedCard.subtype === phase &&
+    !state.hasPlayedIngredientThisTurn;
+  const canDiscard =
+    Boolean(selectedCard) && !state.hasDiscardedThisTurn && !state.hasPlayedIngredientThisTurn;
+  const canUseSelf =
+    selectedCard?.kind === "condiment" &&
+    (selectedCard.mode === "self" || selectedCard.mode === "dual") &&
+    state.condimentsPlayedThisTurn < state.config.maxCondimentsPerTurn;
+  const canThrow =
+    selectedCard?.kind === "condiment" &&
+    (selectedCard.mode === "throw" || selectedCard.mode === "dual") &&
+    state.condimentsPlayedThisTurn < state.config.maxCondimentsPerTurn;
+
+  const actions: {
+    key: string;
+    label: string;
+    variant: "primary" | "secondary" | "ghost";
+    highlight: boolean;
+    run: () => void;
+  }[] = [];
+  if (canPlayIngredient && selectedId) {
+    actions.push({
+      key: "play",
+      label: "Poner en mi lasaña",
+      variant: "primary",
+      highlight: false,
+      run: () => apply(playIngredient(state, ME, selectedId), "ingredient"),
+    });
+  }
+  if (canUseSelf && selectedId) {
+    actions.push({
+      key: "self",
+      label: "Usar en mi lasaña",
+      variant: "secondary",
+      highlight: guide.highlight === "useSelf",
+      run: () => apply(playCondiment(state, ME, selectedId), "condiment_self"),
+    });
+  }
+  if (canThrow && selectedId) {
+    actions.push({
+      key: "throw",
+      label: "Lanzar a un rival",
+      variant: "secondary",
+      highlight: guide.highlight === "throw",
+      run: () => setThrowing(true),
+    });
+  }
+  if (canDiscard && selectedId) {
+    actions.push({
+      key: "discard",
+      label: "Descartar y robar",
+      variant: "ghost",
+      highlight: guide.highlight === "discard",
+      run: () => apply(discardAndDraw(state, ME, selectedId), "discard"),
+    });
+  }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-4 p-4">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl text-brand-cheese">Tutorial</h1>
+    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
+      <PhaseSplash state={state} />
+
+      <AnimatePresence>
+        {splash && (
+          <motion.div
+            key={splash.id}
+            className="pointer-events-none fixed inset-0 z-40 flex items-center justify-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            aria-hidden="true"
+          >
+            <div className="splash-burst absolute inset-0" />
+            <motion.div
+              className="splash-rays absolute h-[140vmax] w-[140vmax] opacity-40"
+              initial={{ scale: 0.4 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+            <motion.div
+              className="relative flex flex-col items-center gap-1"
+              initial={{ scale: 0.3, rotate: -12 }}
+              animate={{ scale: [0.3, 1.15, 1], rotate: [-12, 4, 0] }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+            >
+              <span className="text-7xl drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">{splash.icon}</span>
+              <span className="font-display text-4xl text-outline" style={{ color: splash.color }}>
+                {splash.title}
+              </span>
+              <span className="max-w-[80vw] text-center font-display text-sm text-brand-bechamel">
+                {splash.message}
+              </span>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex shrink-0 items-center justify-between px-3 pt-2">
+        <span className="font-display text-xs uppercase tracking-widest text-brand-cheese">
+          🎓 Tutorial
+        </span>
         <Button size="sm" variant="danger" onClick={onExit}>
           Salir
         </Button>
       </div>
 
-      <p className="rounded-2xl border-3 border-brand-cheese bg-brand-cheese/10 p-3 text-sm">
-        {hintFor(state)}
-      </p>
+      <PhaseHeader
+        state={state}
+        turnLabel={myTurn ? "Es tu turno" : `Juega ${currentPlayer(state).name}`}
+      />
 
-      <div className="grid grid-cols-2 gap-3">
-        {state.players.map((player) => (
-          <PlayerPanel
-            key={player.id}
-            player={player}
-            total={runningTotal(player.lasagna)}
-            isTurn={state.status === "playing" && currentPlayer(state).id === player.id}
-            selectable={throwing && player.id === BOT}
-            onSelect={() => selected && apply(playCondiment(state, ME, selected, BOT))}
-          />
-        ))}
+      <div className="flex shrink-0 justify-center gap-1.5 px-2 pb-1">
+        {MILESTONES.map((milestone) => {
+          const achieved = learned.has(milestone.key);
+          return (
+            <motion.div
+              key={milestone.key}
+              title={milestone.label}
+              animate={achieved ? { scale: [1, 1.35, 1] } : {}}
+              transition={{ duration: 0.4 }}
+              className={cn(
+                "flex h-7 w-7 items-center justify-center rounded-full border-2 text-sm transition-colors",
+                achieved
+                  ? "border-brand-cheese bg-brand-cheese/25"
+                  : "border-brand-bechamel/20 bg-brand-crust/40 opacity-40 grayscale",
+              )}
+            >
+              {milestone.icon}
+            </motion.div>
+          );
+        })}
       </div>
 
-      {myTurn && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border-3 border-brand-crust bg-brand-table/80 p-4">
-          <div className="flex flex-wrap justify-center gap-2">
-            {me.hand.map((cardId, index) => (
-              <CardView
-                key={`${cardId}_${index}`}
-                card={getCard(cardId)}
-                selected={selected === cardId}
-                highlighted={
-                  !state.hasPlayedIngredientThisTurn && isIngredientPlayable(state, cardId)
-                }
-                onClick={() => {
-                  playSound("select");
-                  setSelected(selected === cardId ? null : cardId);
-                  setThrowing(false);
-                }}
-              />
-            ))}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${guide.title}_${guide.body}`}
+          initial={{ opacity: 0, y: -12, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ type: "spring", stiffness: 380, damping: 28 }}
+          className="mx-3 mb-1 flex shrink-0 items-start gap-2 rounded-2xl border-3 border-brand-cheese bg-brand-table/90 px-3 py-2 shadow-card"
+        >
+          <span className="text-2xl leading-none">{guide.icon}</span>
+          <div className="flex flex-col">
+            <span className="font-display text-sm text-brand-cheese">{guide.title}</span>
+            <span className="text-xs text-brand-bechamel/90">{guide.body}</span>
           </div>
-          <div className="flex flex-wrap justify-center gap-2">
-            <Button
-              disabled={card?.kind !== "ingredient" || card.subtype !== currentPhase(state)}
-              onClick={() => selected && apply(playIngredient(state, ME, selected))}
-            >
-              Jugar ingrediente
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={card?.kind !== "condiment" || card.mode === "throw"}
-              onClick={() => selected && apply(playCondiment(state, ME, selected))}
-            >
-              Usar en mi lasaña
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={card?.kind !== "condiment" || card.mode === "self"}
-              onClick={() => setThrowing(true)}
-            >
-              Lanzar al rival
-            </Button>
-            <Button
-              variant="ghost"
-              disabled={!selected || state.hasDiscardedThisTurn}
-              onClick={() => selected && apply(discardAndDraw(state, ME, selected))}
-            >
-              Descartar y robar
-            </Button>
-            <Button variant="danger" onClick={() => apply(endTurn(state, ME))}>
-              Terminar turno
-            </Button>
-          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      <TableStage
+        players={state.players}
+        meId={ME}
+        turnPlayerId={currentPlayer(state).id}
+        secret={false}
+        targeting={throwing}
+        onTarget={(targetId) => {
+          if (!selectedId) return;
+          const card = getCard(selectedId);
+          const target = state.players.find((p) => p.id === targetId);
+          apply(playCondiment(state, ME, selectedId, targetId), "condiment_throw");
+          fireSplash(
+            "⚡",
+            "¡Zasca!",
+            `${card.name} cae en la lasaña de ${target?.name ?? "?"}`,
+            "var(--color-brand-tomato)",
+          );
+        }}
+      />
+
+      {state.status === "playing" && myTurn && (
+        <div className="flex shrink-0 flex-col items-center">
+          {throwing ? (
+            <div className="flex flex-col items-center gap-2 px-3 py-3">
+              <p className="text-center font-display text-sm text-brand-cheese">
+                Elige a qué rival lanzarle {selectedCard?.name} ☝️
+              </p>
+              <Button variant="ghost" size="sm" onClick={() => setThrowing(false)}>
+                Cancelar
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div
+                className={cn(
+                  "rounded-3xl",
+                  guide.highlight === "hand" && "animate-target ring-4 ring-brand-cheese",
+                )}
+              >
+                <HandFan
+                  hand={me.hand}
+                  selectedIndex={selectedIndex}
+                  isPlayable={(cardId) =>
+                    !state.hasPlayedIngredientThisTurn && isIngredientPlayable(state, cardId)
+                  }
+                  onSelect={(index) => {
+                    playSound("select");
+                    vibrate(8);
+                    setSelectedIndex(index === selectedIndex ? null : index);
+                  }}
+                />
+              </div>
+              <div className="flex min-h-13 w-full flex-wrap items-center justify-center gap-2 px-2 pb-2">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {actions.length === 0 ? (
+                    <motion.p
+                      key="hint"
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      className="text-center text-[11px] text-brand-bechamel/60"
+                    >
+                      Toca una carta para ver qué puedes hacer con ella.
+                    </motion.p>
+                  ) : (
+                    actions.map((action) => (
+                      <motion.div
+                        key={action.key}
+                        layout
+                        initial={{ opacity: 0, y: 16, scale: 0.85 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 12, scale: 0.9 }}
+                        transition={{ type: "spring", stiffness: 460, damping: 26 }}
+                      >
+                        <Button
+                          size="sm"
+                          variant={action.variant}
+                          className={cn(
+                            action.highlight && "animate-target ring-4 ring-brand-cheese",
+                          )}
+                          onClick={() => {
+                            vibrate(10);
+                            action.run();
+                          }}
+                        >
+                          {action.label}
+                        </Button>
+                      </motion.div>
+                    ))
+                  )}
+                  <motion.div key="end" layout>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      className={cn(
+                        guide.highlight === "endTurn" && "animate-target ring-4 ring-brand-cheese",
+                      )}
+                      onClick={() => {
+                        vibrate(10);
+                        apply(endTurn(state, ME));
+                      }}
+                    >
+                      Terminar turno
+                    </Button>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {state.status === "playing" && !myTurn && (
+        <div className="shrink-0 border-t-3 border-brand-crust bg-brand-table/90 px-3 py-4 text-center font-display text-sm text-brand-bechamel/70">
+          Turno de {currentPlayer(state).name} · espera a que juegue…
         </div>
       )}
 
       {state.status === "chefDraw" && (
-        <Button
-          className="self-center"
-          onClick={() => {
-            const mine = drawChef(state, ME);
-            apply(mine.ok ? drawChef(mine.state, BOT) : mine);
-          }}
-        >
-          Robar chefs
-        </Button>
+        <div className="flex shrink-0 justify-center px-3 py-4">
+          <Button
+            onClick={() => {
+              const mine = drawChef(state, ME);
+              apply(mine.ok ? drawChef(mine.state, BOT) : mine, "chef");
+            }}
+          >
+            Robar chefs
+          </Button>
+        </div>
       )}
 
       {state.status === "trading" && (
-        <Button className="self-center" onClick={() => apply(finishTrading(state))}>
-          Saltar trueques y puntuar
-        </Button>
+        <div className="flex shrink-0 justify-center px-3 py-4">
+          <Button onClick={() => apply(finishTrading(state))}>Saltar trueques y puntuar</Button>
+        </div>
       )}
 
       {state.status === "scoring" && (
-        <div className="flex flex-col gap-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3">
           {state.players.map((player) => (
             <ScoreBreakdown
               key={player.id}
@@ -182,14 +497,14 @@ export function TutorialScreen({ onExit }: { onExit: () => void }) {
               score={scoreGame(state).find((score) => score.playerId === player.id)!}
             />
           ))}
-          <Button className="self-center" onClick={() => apply(finishScoring(state))}>
+          <Button className="self-center" onClick={() => apply(finishScoring(state), "score")}>
             Ver resultado
           </Button>
         </div>
       )}
 
       {state.status === "finished" && (
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex shrink-0 flex-col items-center gap-3 px-3 py-4">
           <p className="font-display text-xl text-brand-cheese">
             Gana {state.players.find((player) => player.id === state.winnerId)?.name ?? "nadie"}
           </p>
