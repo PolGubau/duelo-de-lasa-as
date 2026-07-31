@@ -1,0 +1,281 @@
+@import "tailwindcss";
+
+@theme {
+  /* Paleta Gastronómica Saturada */
+  --color-brand-tomato: #e63946;
+  --color-brand-sauce: #f4a261;
+  --color-brand-cheese: #ffb703;
+  --color-brand-bechamel: #f8f9fa;
+  --color-brand-basil: #2a9d8f;
+  --color-brand-table: #1d3557;
+  --color-brand-crust: #4a2810;
+
+  --font-display: "Fredoka", "Lilita One", cursive, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --shadow-card: 0 8px 0 var(--color-brand-crust), 0 15px 20px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 12px 0 var(--color-brand-crust), 0 20px 25px rgba(0, 0, 0, 0.4);
+  --shadow-button: 0 6px 0 var(--color-brand-crust);
+  --shadow-button-active: 0 2px 0 var(--color-brand-crust);
+
+  --ease-pop: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-brand-table);
+  color: var(--color-brand-bechamel);
+  overscroll-behavior: none;
+}
+
+/* --- Mesa 3D estilo POV de póker --------------------------------------- */
+
+.table-stage {
+  perspective: 1100px;
+  perspective-origin: 50% 18%;
+}
+
+.table-felt {
+  background:
+    radial-gradient(ellipse at 50% 22%, rgba(255, 183, 3, 0.16) 0%, transparent 62%),
+    radial-gradient(ellipse at 50% 55%, #2f6b4f 0%, #17402f 68%, #0d251c 100%);
+  box-shadow:
+    inset 0 0 90px rgba(0, 0, 0, 0.55),
+    0 -8px 40px rgba(0, 0, 0, 0.5);
+}
+
+.table-tilt {
+  transform: rotateX(52deg);
+  transform-style: preserve-3d;
+}
+
+.seat-3d {
+  transform-style: preserve-3d;
+}
+
+/* Cada capa de la torre se dibuja como una loncha con grosor. */
+.layer-slab {
+  transform-style: preserve-3d;
+  border-radius: 0.4rem;
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.35),
+    0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Mano en abanico ---------------------------------------------------- */
+
+.hand-fan {
+  perspective: 900px;
+  touch-action: pan-y;
+}
+
+.hand-card {
+  transform-origin: 50% 130%;
+  will-change: transform;
+}
+
+/* --- Splash de acción tipo casino --------------------------------------- */
+
+.splash-burst {
+  background: radial-gradient(circle, rgba(255, 183, 3, 0.45) 0%, transparent 68%);
+}
+
+.splash-rays {
+  background: repeating-conic-gradient(from 0deg,
+      rgba(255, 255, 255, 0.16) 0deg 8deg,
+      transparent 8deg 20deg);
+  animation: splash-spin 3.2s linear infinite;
+}
+
+.splash-logo {
+  animation: splash-logo-pop 900ms var(--ease-pop) both;
+}
+
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  transition: opacity 360ms ease, transform 360ms var(--ease-pop);
+}
+
+.splash-screen-exit {
+  opacity: 0;
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+.splash-screen-exit .splash-logo {
+  animation: splash-logo-out 360ms var(--ease-pop) both;
+}
+
+.splash-screen-exit .splash-rays {
+  animation-duration: 0.5s;
+}
+
+@keyframes splash-logo-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(1.5rem) scale(0.72) rotate(-4deg);
+  }
+
+  65% {
+    opacity: 1;
+    transform: translateY(-0.35rem) scale(1.04) rotate(1deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes splash-logo-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-1rem) scale(1.14) rotate(3deg);
+  }
+}
+
+@keyframes splash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.text-outline {
+  -webkit-text-stroke: 2px var(--color-brand-crust);
+  paint-order: stroke fill;
+}
+
+.feedback-toast {
+  position: fixed;
+  z-index: 50;
+  top: 1rem;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  transform: translateX(-50%);
+  border: 3px solid var(--color-brand-crust);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  color: var(--color-brand-bechamel);
+  background: var(--color-brand-basil);
+  box-shadow: var(--shadow-button);
+  font-family: var(--font-display);
+  pointer-events: none;
+}
+
+.feedback-attack {
+  background: var(--color-brand-tomato);
+  animation: feedback-shake 0.45s ease-out;
+}
+
+.feedback-error {
+  background: var(--color-brand-crust);
+}
+
+.feedback-win,
+.feedback-score {
+  background: var(--color-brand-cheese);
+  color: var(--color-brand-crust);
+}
+
+.animate-target {
+  animation: target-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes target-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 183, 3, 0.35);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 183, 3, 0.08);
+  }
+}
+
+@keyframes feedback-shake {
+
+  0%,
+  100% {
+    transform: translateX(-50%) rotate(0);
+  }
+
+  25% {
+    transform: translateX(-50%) rotate(-2deg);
+  }
+
+  75% {
+    transform: translateX(-50%) rotate(2deg);
+  }
+}
+
+.ingredient-rain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ingredient-rain-item {
+  position: absolute;
+  top: -12%;
+  opacity: 0.85;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.25));
+  animation: ingredient-fall var(--duration) linear infinite;
+  animation-delay: var(--delay);
+  will-change: transform;
+}
+
+@keyframes ingredient-fall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(60vh) translateX(var(--drift)) rotate(var(--rotate));
+  }
+
+  100% {
+    transform: translateY(124vh) translateX(0) rotate(calc(var(--rotate) * 2));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-target {
+    animation: none;
+  }
+
+  .ingredient-rain-item {
+    animation: none;
+    top: 50%;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-crust);
+  border-radius: 999px;
+}

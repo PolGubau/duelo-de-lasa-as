@@ -1,0 +1,19 @@
+{
+  "name": "party",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@lasana/engine": "workspace:*",
+    "@lasana/protocol": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260730.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.30.0"
+  }
+}

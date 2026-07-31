@@ -1,0 +1,12 @@
+npm notice run duelo-de-lasanas@0.0.0 npx
+npm notice run wrangler dev
+
+ ⛅️ wrangler 4.118.0
+────────────────────
+Your Worker has access to the following bindings:
+Binding                            Resource            Mode
+env.LASANA_ROOMS (LasanaRoom)      Durable Object      local
+
+⎔ Starting local server...
+[wrangler:info] Ready on http://127.0.0.1:8787
+^C�Desea terminar el trabajo por lotes (S/N)? 

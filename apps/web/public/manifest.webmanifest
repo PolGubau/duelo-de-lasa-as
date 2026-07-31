@@ -1,0 +1,20 @@
+{
+  "name": "¡Lasaña!",
+  "short_name": "Lasaña",
+  "description": "Juego de cartas por turnos: cocina la lasaña más sabrosa y sabotea la de tus rivales.",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1d3557",
+  "theme_color": "#1d3557",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

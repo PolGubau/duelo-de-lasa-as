@@ -1,0 +1,11 @@
+name = "duelo-de-lasanas-party"
+main = "src/index.ts"
+compatibility_date = "2026-07-31"
+
+[[durable_objects.bindings]]
+name = "LASANA_ROOMS"
+class_name = "LasanaRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LasanaRoom"]
