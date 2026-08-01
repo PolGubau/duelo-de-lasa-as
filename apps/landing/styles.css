@@ -869,8 +869,12 @@ h2 em {
   border-radius: 50%;
   background: #eaf5f1;
   color: var(--basil);
-  font-family: var(--display);
-  font-size: 1.5rem;
+  font-size: 1.35rem;
+}
+
+.reason-icon svg {
+  width: 1.3rem;
+  height: 1.3rem;
 }
 
 .reason-grid article:nth-child(2) .reason-icon {
@@ -885,45 +889,21 @@ h2 em {
 
 .final-cta {
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 555px;
-  padding: 80px 1.5rem;
-  background: radial-gradient(circle at 50% 0, rgba(255, 183, 3, .24), transparent 20rem), linear-gradient(130deg, #183251, #1d3557);
+  min-height: 500px;
+  padding: 88px 1.5rem;
+  background: #1d3557;
   color: var(--cream);
   text-align: center;
 }
 
-.final-cta::before {
-  position: absolute;
-  inset: 0;
-  opacity: .2;
-  background: repeating-linear-gradient(-35deg, rgba(255, 255, 255, .08) 0 1px, transparent 1px 15px);
-  content: "";
-}
-
-.final-cta>*:not(.final-glow) {
-  position: relative;
-  z-index: 1;
-}
-
-.final-glow {
-  position: absolute;
-  z-index: 0;
-  top: 45px;
-  width: 290px;
-  height: 290px;
-  border: 1px solid rgba(255, 183, 3, .35);
-  border-radius: 50%;
-  box-shadow: 0 0 0 32px rgba(255, 183, 3, .06), 0 0 0 68px rgba(255, 183, 3, .04);
-}
-
-.final-icon {
-  width: 92px;
-  margin-bottom: 1.25rem;
-  filter: drop-shadow(0 7px 0 rgba(74, 40, 16, .6));
+.final-logo {
+  width: min(220px, 62vw);
+  height: auto;
+  margin-bottom: 1.7rem;
+  filter: drop-shadow(0 7px 0 rgba(74, 40, 16, .5));
 }
 
 .final-cta .eyebrow {
