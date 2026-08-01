@@ -9,5 +9,8 @@
   },
   "dependencies": {
     "lucide": "^1.28.0"
+  },
+  "devDependencies": {
+    "vite-plus": "0.2.7"
   }
 }
