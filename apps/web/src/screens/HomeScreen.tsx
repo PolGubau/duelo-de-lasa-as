@@ -45,11 +45,19 @@ export function HomeScreen({
         </div>
 
         {canInstall && (
-          <div className="w-full rounded-2xl border-3 border-brand-cheese bg-brand-cheese/10 p-4 text-center">
-            <p className="text-sm">Instala la app en tu móvil para jugar a pantalla completa.</p>
-            <Button size="sm" variant="secondary" className="mt-3" onClick={install}>
-              Instalar
-            </Button>
+          <div className="flex w-full items-center gap-3 rounded-2xl border-3 border-brand-cheese bg-brand-cheese/10 p-3 text-left">
+            <img
+              src="/assets/ui/icon_duelo_lasanas.png"
+              alt=""
+              aria-hidden="true"
+              className="h-12 w-12 shrink-0 object-contain drop-shadow-[0_4px_0_rgba(74,40,16,0.6)]"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm">Instala la app en tu móvil para jugar a pantalla completa.</p>
+              <Button size="sm" variant="secondary" className="mt-2" onClick={install}>
+                Instalar
+              </Button>
+            </div>
           </div>
         )}
 

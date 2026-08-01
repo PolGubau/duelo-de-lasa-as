@@ -45,9 +45,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-brand-table p-6 text-center">
-        <span className="text-5xl" aria-hidden="true">
-          🍝💥
-        </span>
+        <img
+          src="/assets/ui/icon_duelo_lasanas.png"
+          alt=""
+          aria-hidden="true"
+          className="h-20 w-20 object-contain drop-shadow-[0_8px_0_rgba(74,40,16,0.65)]"
+        />
         <h1 className="font-display text-2xl text-brand-cheese">
           {this.props.title ?? "¡Se nos quemó la lasaña!"}
         </h1>

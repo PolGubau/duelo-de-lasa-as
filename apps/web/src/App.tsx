@@ -58,9 +58,12 @@ function RoomRoute({ code, onExit, onRoomSelected }: RoomRouteProps) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-3 p-6 text-center">
-      <span className="text-5xl" aria-hidden="true">
-        🍝
-      </span>
+      <img
+        src="/assets/ui/icon_duelo_lasanas.png"
+        alt=""
+        aria-hidden="true"
+        className="h-20 w-20 object-contain drop-shadow-[0_8px_0_rgba(74,40,16,0.65)]"
+      />
       <h1 className="font-display text-2xl text-brand-cheese">Entrando en la sala {code}</h1>
       <p className="text-sm text-brand-bechamel/80">
         {connection === "error" ? "No hemos podido abrir la sala." : "Conectando con tus rivales…"}
