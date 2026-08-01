@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.18.0",
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
     "dev": "vp run -r --log labeled dev"
