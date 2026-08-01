@@ -29,8 +29,18 @@ body,
 
 body {
   font-family: var(--font-body);
-  background: var(--color-brand-table);
+  background:
+    radial-gradient(circle at 50% -10%, rgba(255, 183, 3, 0.12), transparent 35%),
+    var(--color-brand-table);
   color: var(--color-brand-bechamel);
+  overscroll-behavior: none;
+}
+
+/* Durante la partida, la pantalla es un lienzo fijo: sin rebote ni scroll del documento. */
+html.game-active,
+body.game-active {
+  height: 100%;
+  overflow: hidden;
   overscroll-behavior: none;
 }
 
@@ -44,6 +54,23 @@ body {
     radial-gradient(circle at 50% 45%, rgba(29, 53, 87, 0.2), transparent 64%),
     repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 9px),
     linear-gradient(145deg, #142b4a 0%, #1d3557 48%, #173047 100%);
+}
+
+.home-backdrop::before,
+.lobby-shell::before,
+.game-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.28;
+  background:
+    repeating-linear-gradient(0deg,
+      transparent 0 1.1rem,
+      rgba(255, 183, 3, 0.08) 1.1rem 1.22rem,
+      transparent 1.22rem 1.5rem,
+      rgba(230, 57, 70, 0.07) 1.5rem 1.64rem);
+  mix-blend-mode: screen;
 }
 
 .home-backdrop::after {
@@ -60,24 +87,26 @@ body {
   --lobby-actions-space: 6.75rem;
   position: relative;
   padding-bottom: calc(var(--lobby-actions-space) + env(safe-area-inset-bottom));
-  background-color: #1d3557;
+  background-color: #17314f;
   background-image:
-    repeating-linear-gradient(0deg, rgba(248, 249, 250, 0.035) 0 1px, transparent 1px 12px),
-    repeating-linear-gradient(90deg, rgba(248, 249, 250, 0.025) 0 1px, transparent 1px 12px);
+    repeating-linear-gradient(0deg, rgba(248, 249, 250, 0.018) 0 1px, transparent 1px 12px),
+    repeating-linear-gradient(90deg, rgba(9, 24, 43, 0.1) 0 1px, transparent 1px 14px),
+    linear-gradient(180deg, rgba(255, 183, 3, 0.08), transparent 24%, rgba(230, 57, 70, 0.06));
 }
 
 .lobby-shell::after {
   position: fixed;
   inset: 0;
   z-index: 0;
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent 0 7px,
-    rgba(255, 183, 3, 0.035) 7px 8px
-  );
-  background-size: 16px 16px;
+  background-image:
+    radial-gradient(ellipse at 50% 20%, rgba(255, 183, 3, 0.12), transparent 28%),
+    radial-gradient(circle at 7% 89%, rgba(230, 57, 70, 0.17) 0 0.34rem, transparent 0.38rem),
+    radial-gradient(circle at 9% 92%, rgba(244, 162, 97, 0.16) 0 0.18rem, transparent 0.21rem),
+    radial-gradient(ellipse at 93% 10%, rgba(42, 157, 143, 0.16) 0 0.25rem, transparent 0.3rem),
+    radial-gradient(ellipse at 90% 13%, rgba(42, 157, 143, 0.11) 0 0.16rem, transparent 0.2rem);
+  background-repeat: no-repeat;
   content: "";
-  opacity: 0.45;
+  opacity: 0.82;
   pointer-events: none;
 }
 
@@ -131,7 +160,54 @@ body {
 
 .lobby-room-card,
 .lobby-panel {
-  padding: 0.85rem 0;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(248, 249, 250, 0.12);
+  border-radius: 1.1rem;
+  padding: 0.85rem;
+  background:
+    linear-gradient(180deg, rgba(248, 249, 250, 0.055), transparent 25%),
+    linear-gradient(135deg, rgba(230, 57, 70, 0.09), transparent 42%),
+    rgba(8, 20, 35, 0.32);
+  box-shadow:
+    inset 0 1px 0 rgba(248, 249, 250, 0.1),
+    0 12px 25px rgba(0, 0, 0, 0.12);
+}
+
+.lobby-room-card::after,
+.lobby-panel::after {
+  content: "";
+  position: absolute;
+  right: -3rem;
+  bottom: -2.7rem;
+  width: 9rem;
+  height: 4rem;
+  border-radius: 50%;
+  border: 0.8rem solid rgba(255, 183, 3, 0.09);
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.lobby-room-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lobby-room-label {
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  color: rgba(248, 249, 250, 0.7);
+  background: rgba(248, 249, 250, 0.08);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lobby-room-exit {
+  display: none;
 }
 
 .lobby-mobile-tabs {
@@ -140,15 +216,18 @@ body {
 
 .lobby-code-tile {
   display: block;
-  width: 100%;
-  border: 2px dashed rgba(255, 183, 3, 0.55);
-  border-radius: 1rem;
-  background: rgba(8, 20, 35, 0.32);
-  padding: 0.45rem 0.75rem;
+  width: min(100%, 21rem);
+  margin-inline: auto;
+  border: 2px solid rgba(255, 183, 3, 0.5);
+  border-radius: 0.85rem;
+  background:
+    repeating-linear-gradient(0deg, rgba(248, 249, 250, 0.035) 0 0.22rem, transparent 0.22rem 0.55rem),
+    linear-gradient(135deg, rgba(230, 57, 70, 0.18), rgba(8, 20, 35, 0.52) 48%, rgba(255, 183, 3, 0.12));
+  padding: 0.35rem 0.75rem;
   color: var(--color-brand-cheese);
   font-family: var(--font-display);
-  font-size: clamp(2.6rem, 11vw, 4.4rem);
-  letter-spacing: 0.28em;
+  font-size: clamp(2.45rem, 9vw, 3.65rem);
+  letter-spacing: 0.24em;
   line-height: 1.1;
   text-align: center;
   text-indent: 0.28em;
@@ -161,7 +240,7 @@ body {
 
 .lobby-code-tile:hover {
   border-color: var(--color-brand-cheese);
-  background: rgba(255, 183, 3, 0.1);
+  background: rgba(255, 183, 3, 0.13);
   transform: translateY(-1px);
 }
 
@@ -226,25 +305,77 @@ body {
   font-size: 0.72rem;
 }
 
-.lobby-player {
+.lobby-seats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.lobby-seat {
   display: flex;
+  min-width: 0;
+  min-height: 7.4rem;
+  flex-direction: column;
   align-items: center;
-  gap: 0.65rem;
-  min-height: 3.5rem;
-  border-bottom: 1px dotted rgba(248, 249, 250, 0.2);
-  padding: 0.45rem 0.6rem;
+  justify-content: center;
+  border: 1px solid rgba(248, 249, 250, 0.12);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(248, 249, 250, 0.06), transparent 35%),
+    rgba(8, 20, 35, 0.2);
+  padding: 0.55rem 0.35rem;
+  text-align: center;
 }
 
-.lobby-player-self {
-  border-bottom-color: rgba(255, 183, 3, 0.72);
-  background: rgba(255, 183, 3, 0.06);
+.lobby-seat-self {
+  border-color: rgba(255, 183, 3, 0.65);
+  background: rgba(255, 183, 3, 0.08);
 }
 
-.lobby-player-empty {
-  color: rgba(248, 249, 250, 0.35);
+.lobby-seat-avatar {
+  position: relative;
+  margin-bottom: 0.25rem;
 }
 
-.lobby-player-empty > span {
+.lobby-seat-check {
+  position: absolute;
+  right: -0.15rem;
+  bottom: -0.15rem;
+  display: grid;
+  width: 1.1rem;
+  height: 1.1rem;
+  place-items: center;
+  border: 2px solid var(--color-brand-table);
+  border-radius: 999px;
+  color: var(--color-brand-bechamel);
+  background: var(--color-brand-basil);
+}
+
+.lobby-seat-role {
+  margin-top: 0.08rem;
+  color: rgba(248, 249, 250, 0.48);
+  font-size: 0.62rem;
+  line-height: 1.1;
+}
+
+.lobby-seat-status {
+  margin-top: 0.42rem;
+  color: rgba(248, 249, 250, 0.43);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.lobby-seat-status.is-ready {
+  color: var(--color-brand-basil);
+}
+
+.lobby-seat-empty {
+  border-style: dashed;
+  color: rgba(248, 249, 250, 0.38);
+  background: transparent;
+}
+
+.lobby-seat-empty>span {
   display: grid;
   width: 2rem;
   height: 2rem;
@@ -254,14 +385,15 @@ body {
   font-size: 0;
 }
 
-.lobby-player-empty > span::after {
+.lobby-seat-empty>span::after {
   content: "+";
   font-size: 1.3rem;
   line-height: 1;
   transform: translateY(-0.16em);
 }
 
-.lobby-player-empty small {
+.lobby-seat-empty small {
+  margin-top: 0.35rem;
   font-size: 0.7rem;
 }
 
@@ -327,6 +459,15 @@ body {
   transform: none;
 }
 
+.lobby-chat-history {
+  border-top: 1px solid rgba(248, 249, 250, 0.12);
+  padding-top: 0.55rem;
+}
+
+.lobby-chat-history p {
+  min-height: 1.35rem;
+}
+
 .lobby-actions {
   position: fixed;
   right: 0;
@@ -340,7 +481,37 @@ body {
   transform: translateX(-50%);
 }
 
+.lobby-actions>div {
+  display: flex;
+  flex: 1;
+}
+
+.lobby-ready-cta {
+  white-space: nowrap;
+}
+
+.lobby-start-cta {
+  flex: 1;
+}
+
 @media (max-width: 640px) {
+  .lobby-header {
+    display: none;
+  }
+
+  .lobby-room-exit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-height: 2rem;
+    border-radius: 0.55rem;
+    padding: 0.3rem 0.45rem;
+    color: rgba(248, 249, 250, 0.72);
+    background: rgba(248, 249, 250, 0.08);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+  }
+
   .lobby-shell {
     /* Una fila de CTA y, si procede, el aviso del anfitrión. */
     --lobby-actions-space: 6.5rem;
@@ -390,23 +561,22 @@ body {
     font-size: 2.7rem;
   }
 
-  .lobby-player {
-    min-height: 3.15rem;
-    gap: 0.45rem;
-    padding: 0.35rem 0.45rem;
+  .lobby-seat {
+    min-height: 6.7rem;
+    padding: 0.45rem 0.2rem;
   }
 
-  .lobby-player .w-10 {
+  .lobby-seat .w-10 {
     width: 2.25rem;
     height: 2.25rem;
   }
 
-  .lobby-player .text-base {
-    font-size: 0.84rem;
+  .lobby-seat .text-sm {
+    font-size: 0.78rem;
   }
 
-  .lobby-ready,
-  .lobby-waiting {
+  .lobby-seat-role,
+  .lobby-seat-status {
     font-size: 0.58rem;
   }
 
@@ -416,12 +586,12 @@ body {
     gap: 0.45rem;
   }
 
-  .lobby-actions > p {
+  .lobby-actions>p {
     min-width: 0;
     text-align: center;
   }
 
-  .lobby-actions > div:last-child {
+  .lobby-actions>div:last-child {
     width: 100%;
   }
 
@@ -431,20 +601,172 @@ body {
   }
 }
 
-/* --- Mesa 3D estilo POV de póker --------------------------------------- */
+/* --- Escena de partida: cocina nocturna y encimera ---------------------- */
+
+.game-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 16%, rgba(244, 162, 97, 0.2), transparent 24%),
+    radial-gradient(circle at 86% 31%, rgba(230, 57, 70, 0.14), transparent 27%),
+    linear-gradient(145deg, #102842 0%, #193d59 48%, #122d49 100%);
+}
+
+.game-playing {
+  isolation: isolate;
+  position: relative;
+  background-color: #173650;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 222, 166, 0.16), transparent 32%),
+    repeating-linear-gradient(0deg, transparent 0 1.5rem, rgba(255, 183, 3, 0.045) 1.5rem 1.62rem, transparent 1.62rem 2rem),
+    repeating-linear-gradient(90deg, rgba(7, 25, 43, 0.3) 0 1px, transparent 1px 22px),
+    linear-gradient(to bottom, transparent 0 71%, rgba(57, 26, 10, 0.98) 71% 100%),
+    linear-gradient(180deg, #204d68 0%, #14344d 72%, #35190b 72% 100%);
+  box-shadow: 0 0 70px rgba(4, 16, 28, 0.32);
+}
+
+/* --- HUD: lectura inmediata, como una mesa de cartas en móvil ----------- */
+
+.game-hud {
+  position: relative;
+  z-index: 20;
+  border-bottom: 1px solid rgba(248, 249, 250, 0.12);
+  background: linear-gradient(180deg, rgba(8, 27, 46, 0.86), rgba(8, 27, 46, 0.24));
+  box-shadow: 0 9px 20px rgba(2, 13, 24, 0.16);
+}
+
+.round-badge {
+  min-width: 3.25rem;
+  padding-left: 0.2rem;
+}
+
+.round-badge-label {
+  color: rgba(248, 249, 250, 0.55);
+  font-family: var(--font-display);
+  font-size: 0.56rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.round-badge-value {
+  color: var(--color-brand-bechamel);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  letter-spacing: -0.04em;
+  text-shadow: 0 2px 0 rgba(6, 20, 34, 0.7);
+}
+
+.phase-pill {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-radius: 1rem;
+  background:
+    linear-gradient(130deg, rgba(255, 255, 255, 0.3), transparent 42%),
+    var(--phase-accent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    0 3px 0 rgba(35, 17, 8, 0.78),
+    0 7px 15px rgba(0, 0, 0, 0.22);
+}
+
+.phase-pill::after {
+  position: absolute;
+  inset: auto 10% 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.42);
+  content: "";
+}
+
+.phase-pill-icon {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border-radius: 0.48rem;
+  background: rgba(59, 31, 13, 0.18);
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.phase-pill-label {
+  position: relative;
+  z-index: 1;
+  color: #3b1f0d;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.48);
+}
+
+.help-orb {
+  border: 2px solid rgba(255, 255, 255, 0.68);
+  border-radius: 0.8rem;
+  color: var(--color-brand-crust);
+  background: linear-gradient(145deg, #fffdf7, #eacb93);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 3px 0 rgba(59, 31, 13, 0.8),
+    0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Mesa de cocina: superficie, borde trasero y canto frontal ---------- */
 
 .table-stage {
+  isolation: isolate;
   perspective: 1100px;
   perspective-origin: 50% 18%;
+  background:
+    radial-gradient(ellipse at 50% 10%, rgba(255, 232, 178, 0.11), transparent 32%),
+    linear-gradient(180deg, rgba(5, 22, 38, 0.06), rgba(5, 22, 38, 0.38));
+}
+
+.table-stage::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  height: 12%;
+  border-top: 2px solid rgba(255, 214, 151, 0.26);
+  background:
+    repeating-linear-gradient(94deg, rgba(48, 20, 5, 0.18) 0 2px, transparent 2px 18px),
+    linear-gradient(180deg, #7a3917, #3d1b0a);
+  box-shadow: 0 -6px 14px rgba(55, 23, 6, 0.3);
+  content: "";
+  pointer-events: none;
 }
 
 .table-felt {
+  inset: 14% 3% -3%;
+  z-index: 0;
   background:
-    radial-gradient(ellipse at 50% 22%, rgba(255, 183, 3, 0.16) 0%, transparent 62%),
-    radial-gradient(ellipse at 50% 55%, #2f6b4f 0%, #17402f 68%, #0d251c 100%);
+    repeating-linear-gradient(90deg, rgba(75, 32, 9, 0.19) 0 1px, transparent 1px 23%),
+    repeating-linear-gradient(-4deg, rgba(255, 224, 169, 0.1) 0 1px, transparent 1px 9px),
+    radial-gradient(ellipse at 50% 8%, rgba(255, 222, 159, 0.34), transparent 48%),
+    linear-gradient(180deg, #c47a47 0%, #985126 50%, #642d12 100%);
+  border: 5px solid #48200d;
+  border-radius: 1.5rem 1.5rem 0.75rem 0.75rem;
   box-shadow:
-    inset 0 0 90px rgba(0, 0, 0, 0.55),
-    0 -8px 40px rgba(0, 0, 0, 0.5);
+    inset 0 0 74px rgba(52, 22, 6, 0.4),
+    inset 0 3px 0 rgba(255, 232, 178, 0.32),
+    0 -9px 24px rgba(0, 0, 0, 0.28),
+    0 7px 0 #281408;
+}
+
+.table-felt::after {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  left: 0.9rem;
+  height: 0.18rem;
+  border-radius: 999px;
+  background: rgba(255, 233, 190, 0.44);
+  box-shadow: 0 0.22rem 0 rgba(71, 29, 8, 0.38);
+  content: "";
+  pointer-events: none;
 }
 
 .table-tilt {
@@ -456,20 +778,206 @@ body {
   transform-style: preserve-3d;
 }
 
-/* --- Lasaña: capas comestibles, no bloques de color --------------------- */
+.player-seat {
+  z-index: 2;
+  overflow: visible;
+  border: 1px solid rgba(255, 239, 201, 0.18);
+  border-radius: 1rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), transparent 38%),
+    rgba(16, 43, 60, 0.9);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 4px 0 rgba(7, 24, 35, 0.76),
+    0 9px 16px rgba(0, 0, 0, 0.26);
+  backdrop-filter: blur(7px);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
+}
+
+.player-seat.is-active {
+  border-color: rgba(255, 190, 74, 0.9);
+  background:
+    linear-gradient(145deg, rgba(255, 194, 79, 0.18), transparent 38%),
+    rgba(65, 48, 26, 0.94);
+  box-shadow:
+    0 0 0 2px rgba(255, 183, 3, 0.14),
+    0 4px 0 rgba(74, 40, 16, 0.9),
+    0 0 22px rgba(255, 183, 3, 0.25);
+}
+
+.player-seat.is-selectable:hover {
+  border-color: var(--color-brand-cheese);
+  filter: brightness(1.13);
+}
+
+.player-seat-identity {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.player-seat-avatar {
+  border-color: rgba(255, 248, 226, 0.7);
+  box-shadow: 0 2px 0 rgba(8, 27, 19, 0.58);
+}
+
+.player-seat-name,
+.player-seat-role {
+  display: block;
+  max-width: 3.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-seat-name {
+  color: var(--color-brand-bechamel);
+  font-family: var(--font-display);
+  font-size: 0.67rem;
+  line-height: 1;
+}
+
+.player-seat-role {
+  margin-top: 0.15rem;
+  color: rgba(255, 225, 149, 0.78);
+  font-size: 0.5rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.player-seat-stack {
+  display: grid;
+  place-items: end center;
+}
+
+.player-seat-score {
+  position: absolute;
+  right: -0.45rem;
+  bottom: -0.2rem;
+  z-index: 8;
+  min-width: 1.25rem;
+  padding: 0.1rem 0.28rem;
+  border: 1px solid rgba(255, 245, 211, 0.7);
+  border-radius: 999px;
+  color: var(--color-brand-cheese);
+  background: #17394d;
+  box-shadow: 0 2px 0 rgba(5, 20, 30, 0.8);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.player-tray {
+  z-index: 3;
+  gap: 0.15rem;
+}
+
+.player-tray-score {
+  display: flex;
+  min-width: 5.25rem;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.22rem 0.85rem 0.16rem;
+  border: 1px solid rgba(255, 239, 192, 0.48);
+  border-radius: 0.75rem 0.75rem 0.45rem 0.45rem;
+  background: linear-gradient(145deg, #21475f, #112d40);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 3px 0 rgba(7, 27, 40, 0.82),
+    0 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.player-tray-score span {
+  color: rgba(255, 238, 198, 0.62);
+  font-family: var(--font-display);
+  font-size: 0.53rem;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.player-tray-score strong {
+  color: var(--color-brand-cheese);
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  letter-spacing: -0.07em;
+  line-height: 0.9;
+  text-shadow: 0 2px 0 var(--color-brand-crust);
+}
+
+.player-tray-stack {
+  filter: drop-shadow(0 9px 8px rgba(0, 0, 0, 0.2));
+}
+
+.player-tray-label {
+  padding: 0.18rem 0.65rem;
+  border-radius: 999px;
+  color: rgba(248, 249, 250, 0.75);
+  background: rgba(7, 27, 40, 0.58);
+  font-family: var(--font-display);
+  font-size: 0.67rem;
+  line-height: 1;
+}
+
+.player-tray-label span {
+  color: var(--color-brand-cheese);
+}
+
+/* Reserva una zona fija para la mano en retrato: la mesa nunca expulsa cartas de la pantalla. */
+@media (max-width: 40rem) and (orientation: portrait) {
+  .table-stage {
+    flex: 0 1 60svh;
+    max-height: 60svh;
+  }
+
+  .game-hand-area {
+    margin-top: auto;
+  }
+
+  .table-felt {
+    inset: 17% 4% -2%;
+  }
+
+  .player-tray {
+    bottom: 0.4rem;
+  }
+
+  .player-tray-score strong {
+    font-size: 1.6rem;
+  }
+}
+
+/* --- Lasaña: capas comestibles y plato de presentación ------------------ */
 
 .lasagna-stack {
   filter: drop-shadow(0 5px 4px rgba(0, 0, 0, 0.28));
 }
 
+.lasagna-stack.is-featured {
+  filter: drop-shadow(0 9px 8px rgba(45, 19, 5, 0.38));
+}
+
 .lasagna-plate {
   z-index: 0;
-  border: 2px solid rgba(248, 249, 250, 0.65);
+  border: 3px solid #eff4f2;
   border-radius: 50%;
-  background: #dce8ee;
+  background:
+    radial-gradient(ellipse at 50% 35%, #ffffff 0 16%, transparent 17%),
+    linear-gradient(180deg, #ffffff, #c3d2d4);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 3px 0 rgba(5, 17, 31, 0.3);
+    inset 0 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -3px 0 rgba(98, 125, 129, 0.32),
+    0 4px 0 rgba(50, 25, 9, 0.42),
+    0 7px 10px rgba(0, 0, 0, 0.22);
+}
+
+.lasagna-stack.is-featured .lasagna-plate {
+  inset-right: -8%;
+  inset-left: -8%;
 }
 
 .lasagna-empty {
@@ -480,13 +988,13 @@ body {
 .lasagna-layer {
   transform-style: preserve-3d;
   overflow: hidden;
-  border: 1.5px solid var(--color-brand-crust);
-  border-radius: 36% 43% 28% 34% / 38% 32% 42% 35%;
+  border: 1.5px solid #633113;
+  border-radius: 11% 14% 9% 13% / 34% 28% 30% 26%;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    inset 0 2px 0 rgba(255, 248, 220, 0.42),
+    inset 0 -3px 0 rgba(72, 30, 8, 0.3),
     0 2px 0 rgba(74, 40, 16, 0.72),
-    0 5px 9px rgba(0, 0, 0, 0.24);
-  text-shadow: 0 1px 0 rgba(248, 249, 250, 0.38);
+    0 4px 7px rgba(0, 0, 0, 0.2);
 }
 
 .lasagna-layer::before {
@@ -498,8 +1006,25 @@ body {
   pointer-events: none;
 }
 
+.lasagna-layer::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 45%);
+  content: "";
+  pointer-events: none;
+}
+
+.lasagna-stack.is-featured .lasagna-layer {
+  border-width: 2px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 248, 220, 0.48),
+    inset 0 -4px 0 rgba(72, 30, 8, 0.28),
+    0 3px 0 rgba(74, 40, 16, 0.72),
+    0 6px 9px rgba(0, 0, 0, 0.22);
+}
+
 .lasagna-layer.is-pasta {
-  background-color: #e7b75c;
+  background: linear-gradient(180deg, #f2cb78, #d89739);
 }
 
 .lasagna-layer.is-pasta::before {
@@ -507,7 +1032,7 @@ body {
 }
 
 .lasagna-layer.is-bechamel {
-  background-color: #f5e8c7;
+  background: linear-gradient(180deg, #fff7dc, #e8cb91);
 }
 
 .lasagna-layer.is-bechamel::before {
@@ -516,7 +1041,7 @@ body {
 }
 
 .lasagna-layer.is-filling {
-  background-color: #b84d38;
+  background: linear-gradient(180deg, #cf6548, #9c382b);
 }
 
 .lasagna-layer.is-filling::before {
@@ -524,7 +1049,7 @@ body {
 }
 
 .lasagna-layer.is-condiment {
-  background-color: #d79a3e;
+  background: linear-gradient(180deg, #e8b65b, #b87322);
 }
 
 .lasagna-layer.is-condiment::before {
@@ -533,7 +1058,7 @@ body {
 }
 
 .lasagna-layer.is-opponent {
-  background-color: #d94242;
+  background: linear-gradient(180deg, #e35a52, #a72c31);
 }
 
 .lasagna-layer.is-opponent::before {
@@ -550,9 +1075,20 @@ body {
 
 .lasagna-layer.is-top-layer {
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.55),
-    0 2px 0 rgba(74, 40, 16, 0.72),
-    0 5px 9px rgba(0, 0, 0, 0.24);
+    inset 0 3px 0 rgba(255, 253, 225, 0.7),
+    inset 0 -3px 0 rgba(72, 30, 8, 0.3),
+    0 3px 0 rgba(74, 40, 16, 0.72),
+    0 6px 9px rgba(0, 0, 0, 0.24);
+}
+
+.lasagna-layer.is-top-layer::after {
+  inset: 8% 10%;
+  border-radius: 48% 52% 45% 55%;
+  background:
+    radial-gradient(circle at 22% 52%, #fff0a1 0 4%, transparent 5%),
+    radial-gradient(circle at 48% 34%, #fff4b5 0 5%, transparent 6%),
+    radial-gradient(circle at 74% 56%, #ffe88d 0 4%, transparent 5%),
+    linear-gradient(180deg, rgba(255, 243, 165, 0.88), rgba(229, 174, 59, 0.48));
 }
 
 /* --- Mano en abanico ---------------------------------------------------- */
@@ -565,6 +1101,86 @@ body {
 .hand-card {
   transform-origin: 50% 130%;
   will-change: transform;
+}
+
+/* El hover debe sentirse como sacar una carta física de la mano. */
+.card-view.is-interactive {
+  transform-origin: 50% 100%;
+}
+
+.card-sheen {
+  z-index: 15;
+  top: -20%;
+  bottom: -20%;
+  left: -65%;
+  width: 42%;
+  opacity: 0;
+  transform: skewX(-22deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent);
+  mix-blend-mode: screen;
+}
+
+.card-art {
+  transition:
+    opacity 200ms ease,
+    transform 220ms var(--ease-pop);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-view.is-interactive:hover {
+    z-index: 50;
+  }
+
+  .card-view.is-interactive:hover .card-sheen {
+    animation: card-sheen 620ms ease-out both;
+  }
+
+  .card-view.is-interactive:hover .card-art {
+    transform: scale(1.07) rotate(-1.5deg);
+  }
+
+  .card-view.is-interactive:hover>button {
+    box-shadow:
+      0 11px 0 var(--color-brand-crust),
+      0 18px 25px rgba(0, 0, 0, 0.44),
+      0 0 0 2px rgba(255, 244, 207, 0.86),
+      0 0 20px rgba(255, 183, 3, 0.48);
+  }
+}
+
+@keyframes card-sheen {
+  0% {
+    opacity: 0;
+    transform: translateX(0) skewX(-22deg);
+  }
+
+  22% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(440%) skewX(-22deg);
+  }
+}
+
+/* --- Aviso de fase: foco cálido, sobrio y legible ----------------------- */
+
+.phase-splash-backdrop {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 183, 3, 0.22), transparent 30%),
+    linear-gradient(180deg, rgba(8, 22, 36, 0.89), rgba(12, 29, 44, 0.94));
+  backdrop-filter: blur(5px);
+}
+
+.phase-splash-panel {
+  border: 1px solid rgba(255, 238, 197, 0.3);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 42%),
+    rgba(18, 45, 65, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 22px 60px rgba(0, 0, 0, 0.42);
 }
 
 /* --- Splash de acción tipo casino --------------------------------------- */
@@ -583,11 +1199,13 @@ body {
 }
 
 .splash-rays {
-  background: repeating-conic-gradient(
-    from 0deg,
-    rgba(255, 255, 255, 0.16) 0deg 8deg,
-    transparent 8deg 20deg
-  );
+  inset: 50% auto auto 50%;
+  width: 180vmax;
+  height: 180vmax;
+  margin: -90vmax 0 0 -90vmax;
+  background: repeating-conic-gradient(from 0deg,
+      rgba(255, 255, 255, 0.16) 0deg 8deg,
+      transparent 8deg 20deg);
   animation: splash-spin 3.2s linear infinite;
 }
 
@@ -710,10 +1328,13 @@ body {
   max-width: min(92vw, 23rem);
   transform: translateX(-50%);
   border: 2px solid var(--color-brand-crust);
-  border-radius: 0.75rem;
+  border-radius: 0.55rem 0.8rem 0.55rem 0.8rem;
   padding: 0.42rem 0.72rem 0.42rem 0.48rem;
   color: var(--color-brand-bechamel);
   background: linear-gradient(145deg, #399f91, #237d72);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(248, 249, 250, 0.06) 0 0.2rem, transparent 0.2rem 0.5rem),
+    linear-gradient(145deg, #399f91, #237d72);
   box-shadow:
     0 4px 0 var(--color-brand-crust),
     0 10px 22px rgba(0, 0, 0, 0.28);
@@ -723,7 +1344,7 @@ body {
   pointer-events: none;
 }
 
-.feedback-toast > span:first-child {
+.feedback-toast>span:first-child {
   display: grid;
   width: 1.7rem;
   height: 1.7rem;
@@ -754,8 +1375,8 @@ body {
   color: var(--color-brand-crust);
 }
 
-.feedback-win > span:first-child,
-.feedback-score > span:first-child {
+.feedback-win>span:first-child,
+.feedback-score>span:first-child {
   border-color: rgba(74, 40, 16, 0.9);
   background: rgba(74, 40, 16, 0.78);
 }
@@ -765,6 +1386,7 @@ body {
 }
 
 @keyframes target-pulse {
+
   0%,
   100% {
     box-shadow: 0 0 0 0 rgba(255, 183, 3, 0.35);
@@ -776,6 +1398,7 @@ body {
 }
 
 @keyframes feedback-shake {
+
   0%,
   100% {
     transform: translateX(-50%) rotate(0);

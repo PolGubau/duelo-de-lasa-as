@@ -14,7 +14,7 @@ interface CardViewProps {
   disabled?: boolean;
   highlighted?: boolean;
   selected?: boolean;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "hand" | "md" | "lg";
   /** Oculta el botón de ayuda cuando la carta se muestra solo como decoración. */
   hideInfo?: boolean;
   className?: string;
@@ -23,6 +23,7 @@ interface CardViewProps {
 const SIZES: Record<NonNullable<CardViewProps["size"]>, string> = {
   xs: "w-14 h-[5.25rem] text-[8px]",
   sm: "w-[4.5rem] h-[6.75rem] text-[9px]",
+  hand: "w-[clamp(4.8rem,20vw,5.1rem)] h-[clamp(7.125rem,28vw,7.5rem)] text-[10px]",
   md: "w-[5.5rem] h-[8.25rem] text-[10px]",
   lg: "w-32 h-48 text-xs",
 };
@@ -57,7 +58,7 @@ export function CardView({
   const src = cardImageSrc(card);
 
   return (
-    <div className={cn("relative inline-block shrink-0", className)}>
+    <div className={cn("card-view relative inline-block shrink-0", interactive && "is-interactive", className)}>
       <motion.button
         type="button"
         onClick={onClick}
@@ -66,11 +67,11 @@ export function CardView({
         onTapStart={
           interactive
             ? () => {
-                vibrate(8);
-              }
+              vibrate(8);
+            }
             : undefined
         }
-        whileHover={interactive ? { scale: 1.08, y: -10, rotate: 0 } : undefined}
+        whileHover={interactive ? { scale: 1.12, y: -18, rotate: -1.2 } : undefined}
         whileTap={interactive ? { scale: 0.96 } : undefined}
         transition={{ type: "spring", stiffness: 520, damping: 26 }}
         style={{ background: theme.background, borderColor: theme.frame }}
@@ -94,6 +95,7 @@ export function CardView({
           className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-lg bg-white/25"
           aria-hidden="true"
         />
+        {interactive && <span aria-hidden="true" className="card-sheen pointer-events-none absolute" />}
         <span className="relative z-10 flex flex-1 items-center justify-center p-1">
           {!imgLoaded && (
             <span
@@ -109,7 +111,7 @@ export function CardView({
             decoding="async"
             onLoad={() => setImgLoaded(true)}
             className={cn(
-              "h-full w-full object-contain drop-shadow-[0_3px_4px_rgba(0,0,0,0.45)] transition-opacity duration-200",
+              "card-art h-full w-full object-contain drop-shadow-[0_3px_4px_rgba(0,0,0,0.45)] transition-opacity duration-200",
               imgLoaded ? "opacity-100" : "opacity-0",
             )}
           />

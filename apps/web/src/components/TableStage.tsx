@@ -1,6 +1,7 @@
 import type { PlayerState } from "@lasana/engine";
 import { getChef } from "@lasana/engine";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "../lib/cn.ts";
 import { formatScore, runningTotal } from "../lib/layers.ts";
 import { playSound, vibrate } from "../lib/sound.ts";
@@ -27,6 +28,50 @@ function seatPosition(index: number, count: number): { x: number; y: number; sca
   return { x, y, scale: 0.82 + 0.18 * ((y - 16) / 16) };
 }
 
+interface ScoreDeltaProps {
+  total: number;
+  hidden?: boolean;
+  className?: string;
+}
+
+/** Hace visible, durante un instante, cómo acaba de cambiar el valor de una lasaña. */
+function ScoreDelta({ total, hidden = false, className }: ScoreDeltaProps) {
+  const previousTotal = useRef(total);
+  const [delta, setDelta] = useState<{ amount: number; id: number } | null>(null);
+
+  useEffect(() => {
+    const previous = previousTotal.current;
+    previousTotal.current = total;
+    if (hidden || previous === total) return;
+
+    setDelta({ amount: total - previous, id: total });
+    const timer = window.setTimeout(() => setDelta(null), 850);
+    return () => window.clearTimeout(timer);
+  }, [hidden, total]);
+
+  return (
+    <AnimatePresence>
+      {delta && (
+        <motion.span
+          key={delta.id}
+          initial={{ opacity: 0, scale: 0.4, x: -8, y: 10 }}
+          animate={{ opacity: 1, scale: [0.7, 1.35, 1], x: 0, y: -30 }}
+          exit={{ opacity: 0, scale: 0.8, y: -44 }}
+          transition={{ duration: 0.55, ease: "easeOut" }}
+          className={cn(
+            "pointer-events-none absolute z-20 whitespace-nowrap font-display text-xl drop-shadow-[0_2px_0_#3B1F0D]",
+            delta.amount > 0 ? "text-emerald-400" : "text-red-500",
+            className,
+          )}
+        >
+          {delta.amount > 0 ? "+" : "−"}
+          {formatScore(Math.abs(delta.amount))}
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export function TableStage({
   players,
   meId,
@@ -38,15 +83,17 @@ export function TableStage({
   const me = players.find((player) => player.id === meId);
   const rivals = players.filter((player) => player.id !== me?.id);
   const center = me ?? players[0]!;
+  const centerTotal = runningTotal(center.lasagna);
 
   return (
     <div className="table-stage relative min-h-0 flex-1 overflow-hidden">
-      <div className="table-felt absolute inset-x-[-12%] bottom-[-28%] top-[6%] rounded-[50%]" />
+      <div className="table-felt absolute" aria-hidden="true" />
 
       {rivals.map((player, index) => {
         const { x, y, scale } = seatPosition(index, rivals.length);
         const chef = player.chefId ? getChef(player.chefId) : undefined;
         const selectable = targeting && player.id !== turnPlayerId;
+        const total = runningTotal(player.lasagna);
         return (
           <motion.button
             key={player.id}
@@ -60,12 +107,12 @@ export function TableStage({
             }}
             onHoverStart={selectable ? () => playSound("hover") : undefined}
             className={cn(
-              "seat-3d absolute flex w-24 flex-col items-center gap-0.5 rounded-2xl border-3 px-1.5 py-1 transition-colors",
+              "player-seat seat-3d absolute flex w-[6.4rem] flex-col items-center gap-1 px-1.5 py-1.5",
               player.id === turnPlayerId
-                ? "border-brand-tomato bg-brand-crust/80"
-                : "border-brand-crust/60 bg-brand-crust/45",
+                ? "is-active"
+                : "is-idle",
               selectable
-                ? "animate-target cursor-pointer hover:border-brand-cheese"
+                ? "is-selectable animate-target cursor-pointer"
                 : "cursor-default",
             )}
             style={{
@@ -74,36 +121,42 @@ export function TableStage({
               transform: `translate(-50%,-50%) scale(${scale})`,
             }}
           >
-            <Avatar id={player.id} name={player.name} size="sm" />
-            <span className="max-w-full truncate font-display text-[10px] text-brand-bechamel">
-              {player.name}
-            </span>
-            {chef && (
-              <span className="max-w-full truncate text-[8px] text-brand-cheese">{chef.name}</span>
-            )}
-            <LasagnaStack3D layers={player.lasagna} hidden={secret} slabHeight={8} width={78} />
-            <span className="font-display text-xs text-brand-cheese">
-              {secret ? "?" : formatScore(runningTotal(player.lasagna))}
-            </span>
+            <div className="player-seat-identity">
+              <Avatar id={player.id} name={player.name} size="sm" className="player-seat-avatar" />
+              <div className="min-w-0 text-left">
+                <span className="player-seat-name">{player.name}</span>
+                <span className="player-seat-role">{chef?.name ?? "En cocina"}</span>
+              </div>
+            </div>
+            <div className="player-seat-stack relative">
+              <LasagnaStack3D layers={player.lasagna} hidden={secret} slabHeight={8} width={78} />
+              <ScoreDelta total={total} hidden={secret} className="left-full top-1/2 ml-1" />
+              <span className="player-seat-score">{secret ? "?" : formatScore(total)}</span>
+            </div>
           </motion.button>
         );
       })}
 
-      <div className="absolute inset-x-0 bottom-1 flex flex-col items-center gap-1">
-        <motion.span
-          key={runningTotal(center.lasagna)}
-          initial={{ scale: 1.6, color: "var(--color-brand-tomato)" }}
-          animate={{ scale: 1, color: "var(--color-brand-cheese)" }}
-          transition={{ type: "spring", stiffness: 420, damping: 18 }}
-          className="font-display text-3xl text-outline"
-        >
-          {formatScore(runningTotal(center.lasagna))}
-        </motion.span>
-        <div className="flex max-h-[42vh] items-end overflow-hidden">
-          <LasagnaStack3D layers={center.lasagna} slabHeight={16} width={150} />
+      <div className="player-tray absolute inset-x-0 bottom-1 flex flex-col items-center">
+        <div className="player-tray-score">
+          <span>Puntos</span>
+          <motion.strong
+            key={centerTotal}
+            initial={{ scale: 1.6, color: "var(--color-brand-tomato)" }}
+            animate={{ scale: 1, color: "var(--color-brand-cheese)" }}
+            transition={{ type: "spring", stiffness: 420, damping: 18 }}
+          >
+            {formatScore(centerTotal)}
+          </motion.strong>
         </div>
-        <span className="font-display text-[11px] text-brand-bechamel/80">
-          Tu lasaña · {center.name}
+        <div className="player-tray-stack relative">
+          <div className="flex max-h-[42vh] items-end overflow-hidden">
+            <LasagnaStack3D featured layers={center.lasagna} slabHeight={17} width={164} />
+          </div>
+          <ScoreDelta total={centerTotal} className="left-full top-1/2 ml-3" />
+        </div>
+        <span className="player-tray-label">
+          <span>Tu lasaña</span> · {center.name}
         </span>
       </div>
     </div>

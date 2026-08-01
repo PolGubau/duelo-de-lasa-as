@@ -9,6 +9,8 @@ interface LasagnaStack3DProps {
   width?: number;
   /** Modo secreto: capas boca abajo, sin nombre ni valor. */
   hidden?: boolean;
+  /** Presentación protagonista para la lasaña del jugador local. */
+  featured?: boolean;
 }
 
 type LayerLook = "pasta" | "bechamel" | "filling" | "condiment" | "opponent";
@@ -31,13 +33,14 @@ export function LasagnaStack3D({
   slabHeight = 14,
   width = 130,
   hidden,
+  featured = false,
 }: LasagnaStack3DProps) {
   const overlap = slabHeight * 0.62;
   const baseOffset = slabHeight * 0.32;
 
   return (
     <div
-      className="lasagna-stack relative isolate"
+      className={cn("lasagna-stack relative isolate", featured && "is-featured")}
       style={{ width, height: Math.max(slabHeight * 1.7, layers.length * overlap + slabHeight) }}
     >
       <div
@@ -59,6 +62,7 @@ export function LasagnaStack3D({
             `is-${hidden ? "hidden" : layerLook(layer)}`,
             i === layers.length - 1 && "is-top-layer",
           )}
+          title={hidden ? "Capa oculta" : layer.cardName}
           style={{
             bottom: baseOffset + i * overlap,
             height: slabHeight,
@@ -68,17 +72,6 @@ export function LasagnaStack3D({
           animate={{ opacity: 1, y: 0, rotateZ: 0, scaleX: 1 }}
           transition={{ type: "spring", stiffness: 380, damping: 18 }}
         >
-          {!hidden && (
-            <>
-              <span className="relative z-10 truncate text-[9px] font-bold leading-none text-brand-crust">
-                {layer.cardName}
-              </span>
-              <span className="relative z-10 shrink-0 font-display text-[10px] leading-none text-brand-crust">
-                {layer.op === "multiply" ? "×" : layer.value >= 0 ? "+" : ""}
-                {layer.value}
-              </span>
-            </>
-          )}
         </motion.div>
       ))}
     </div>

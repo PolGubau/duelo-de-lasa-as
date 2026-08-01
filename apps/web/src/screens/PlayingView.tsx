@@ -1,5 +1,6 @@
 import type { GameState } from "@lasana/engine";
 import { currentPlayer } from "@lasana/engine";
+import { useEffect } from "react";
 import { HandArea } from "../components/HandArea.tsx";
 import { PhaseHeader } from "../components/PhaseHeader.tsx";
 import { PhaseSplash } from "../components/PhaseSplash.tsx";
@@ -18,8 +19,17 @@ export function PlayingView({ state }: PlayingViewProps) {
   const isMyTurn = acting.id === sessionId;
   const secret = state.config.visibility === "secret";
 
+  useEffect(() => {
+    document.documentElement.classList.add("game-active");
+    document.body.classList.add("game-active");
+    return () => {
+      document.documentElement.classList.remove("game-active");
+      document.body.classList.remove("game-active");
+    };
+  }, []);
+
   return (
-    <div className="mx-auto flex h-dvh w-full max-w-3xl flex-col overflow-hidden">
+    <div className="game-playing mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col overflow-hidden">
       <PhaseSplash state={state} />
       <PhaseHeader state={state} turnLabel={`Juega ${acting.name}`} />
 

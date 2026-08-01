@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 import { phaseInfoFor, type PhaseInfo } from "../lib/phases.ts";
 import { playSound } from "../lib/sound.ts";
 
-/** Veces que se explica cada fase antes de mostrar solo el rótulo. */
-const EXPLAIN_TIMES = 2;
-const EXPLAIN_DURATION = 7000;
-const LABEL_DURATION = 4000;
+/** La primera explicación orienta; el resto de avisos no debe cortar el ritmo. */
+const EXPLAIN_TIMES = 1;
+const EXPLAIN_DURATION = 3000;
+const LABEL_DURATION = 1300;
 const seen = new Map<string, number>();
 
 interface PhaseSplashProps {
@@ -64,9 +64,9 @@ export function PhaseSplash({ state }: PhaseSplashProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <div className="absolute inset-0 bg-black/45" />
+          <div className="phase-splash-backdrop absolute inset-0" />
           <motion.div
-            className="relative flex w-full max-w-sm flex-col items-center gap-2 rounded-3xl border-3 border-brand-crust bg-brand-table/95 px-5 py-6 shadow-card"
+            className="phase-splash-panel relative flex w-full max-w-sm flex-col items-center gap-2 rounded-2xl px-5 py-6"
             initial={{ scale: 0.6, y: 30 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0 }}

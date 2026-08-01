@@ -36,7 +36,7 @@ export function HomeScreen({
         <div className="text-center">
           <img
             src="/assets/ui/logo_lasana_game.png"
-            alt="¡Lasaña!"
+            alt="Duelo de Lasañas"
             className="mx-auto w-full max-w-sm drop-shadow-[0_12px_0_rgba(74,40,16,0.65)]"
           />
           <p className="mt-2 text-sm text-brand-bechamel/80">

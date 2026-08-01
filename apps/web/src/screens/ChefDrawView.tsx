@@ -60,9 +60,14 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
   const seenChefs = useRef<Set<string>>(new Set());
 
   const me = state.players.find((p) => p.id === sessionId);
+  const choices = me ? state.chefChoices[me.id] : undefined;
   const drawnCount = state.players.filter((p) => p.chefId).length;
 
   useEffect(() => {
+    if (choices?.length) {
+      setOpening(false);
+      return;
+    }
     if (me?.chefId && !seenChefs.current.has(me.id)) {
       seenChefs.current.add(me.id);
       setOpening(false);
@@ -73,7 +78,7 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
       return () => window.clearTimeout(timer);
     }
     for (const p of state.players) if (p.chefId) seenChefs.current.add(p.id);
-  }, [me, state.players]);
+  }, [choices, me, state.players]);
 
   /** Evita que el sobre se quede "abriendo" para siempre si la acción se rechaza. */
   useEffect(() => {
@@ -83,11 +88,19 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
   }, [opening]);
 
   function handleDraw(): void {
-    if (!me || me.chefId || opening) return;
+    if (!me || me.chefId || choices?.length || opening) return;
     playSound("select");
     vibrate(10);
     setOpening(true);
-    drawChef(me.id);
+    drawChef();
+  }
+
+  function chooseChef(chefId: string): void {
+    if (opening) return;
+    playSound("select");
+    vibrate(10);
+    setOpening(true);
+    drawChef(chefId);
   }
 
   return (
@@ -101,7 +114,7 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
         ¡Reparto de Chefs!
       </motion.h2>
       <p className="text-center text-sm text-brand-bechamel/80">
-        Cada jugador saca un chef al azar. Su efecto se aplicará al puntuar.
+        Cada jugador elige uno de dos chefs. Su efecto se aplicará al puntuar.
       </p>
 
       <div className="flex gap-1.5" aria-hidden="true">
@@ -128,7 +141,35 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
             />
           )}
           <AnimatePresence mode="wait" initial={false}>
-            {!me.chefId ? (
+            {!me.chefId && choices ? (
+              <motion.div
+                key="choices"
+                className="relative z-10 flex items-start justify-center gap-3"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+              >
+                {choices.map((chefId) => {
+                  const chef = getChef(chefId);
+                  return (
+                    <div
+                      key={chefId}
+                      className="flex flex-col items-center"
+                    >
+                      <CardView
+                        card={chef}
+                        size="md"
+                        hideInfo
+                        onClick={() => chooseChef(chefId)}
+                      />
+                      <span className="mt-1 block max-w-22 text-center text-xs text-brand-cheese">
+                        Elegir {chef.name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            ) : !me.chefId ? (
               <motion.button
                 key="pack"
                 type="button"
@@ -186,7 +227,7 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
       )}
 
       <p className="text-xs text-brand-bechamel/60">
-        {drawnCount} / {state.players.length} chefs repartidos
+        {drawnCount} / {state.players.length} chefs elegidos
       </p>
 
       <div className="flex w-full flex-col gap-2">

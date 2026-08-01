@@ -16,7 +16,7 @@ export const DEFAULT_CONFIG: GameConfig = {
   roundsCount: 4,
   handSize: 4,
   drawToHandSize: 4,
-  maxCondimentsPerTurn: 4,
+  maxCondimentsPerTurn: 2,
   visibility: "public",
 };
 
@@ -66,6 +66,7 @@ export function createGame(
     deck,
     discard: [],
     chefDeck,
+    chefChoices: {},
     round: 1,
     phaseIndex: 0,
     turnPlayerIndex: 0,
@@ -268,19 +269,41 @@ export function endTurn(state: GameState, playerId: string): ActionResult {
   return { ok: true, state: next };
 }
 
-export function drawChef(state: GameState, playerId: string): ActionResult {
+export function drawChef(state: GameState, playerId: string, chefId?: string): ActionResult {
   if (state.status !== "chefDraw") return fail(state, "No es momento de repartir chefs.");
   const player = state.players.find((p) => p.id === playerId);
   if (!player) return fail(state, "Jugador desconocido.");
   if (player.chefId) return fail(state, "Ya tienes un chef asignado.");
-  if (state.chefDeck.length === 0) return fail(state, "No quedan chefs por repartir.");
+
+  const choices = state.chefChoices[playerId];
+  if (!choices) {
+    const candidates = [...new Set(state.chefDeck)];
+    if (candidates.length < 2) return fail(state, "No quedan suficientes chefs para elegir.");
+
+    const next = clone(state);
+    const offered: string[] = [];
+    let available = [...new Set(next.chefDeck)];
+    for (let i = 0; i < 2; i++) {
+      const [rngState, index] = randomInt(next.rngState, available.length);
+      next.rngState = rngState;
+      const offeredChefId = available[index]!;
+      offered.push(offeredChefId);
+      next.chefDeck.splice(next.chefDeck.indexOf(offeredChefId), 1);
+      available = available.filter((id) => id !== offeredChefId);
+    }
+    next.chefChoices = { ...next.chefChoices, [playerId]: offered };
+    next.log.push(`${player.name} recibe dos opciones de chef.`);
+    return { ok: true, state: next };
+  }
+
+  if (!chefId || !choices.includes(chefId))
+    return fail(state, "Elige uno de los chefs que te han ofrecido.");
 
   const next = clone(state);
-  const [rngState, index] = randomInt(next.rngState, next.chefDeck.length);
-  next.rngState = rngState;
-  const chefId = next.chefDeck.splice(index, 1)[0]!;
   const actor = next.players.find((p) => p.id === playerId)!;
   actor.chefId = chefId;
+  const { [playerId]: _chosen, ...remainingChoices } = next.chefChoices;
+  next.chefChoices = remainingChoices;
   next.log.push(`${actor.name} recibe al chef ${getChef(chefId).name}.`);
   if (next.players.every((p) => p.chefId)) {
     next.status = "trading";

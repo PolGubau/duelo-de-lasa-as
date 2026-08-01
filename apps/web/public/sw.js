@@ -1,12 +1,18 @@
-const CACHE = "lasana-v3";
+const CACHE = "lasana-v6";
 const PRECACHE = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
-  "/favicon.svg",
+  "/favicon-32.png",
+  "/favicon-64.png",
+  "/apple-touch-icon.png",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/assets/ui/icon_duelo_lasanas.png",
   "/assets/ui/logo_lasana_game.png",
   "/assets/ui/logo_lasana_game_compact.png",
   "/assets/ui/logo_lasana_game_light.png",
+  "/assets/ui/logo_duelo_lasanas_splash.png",
 ];
 
 self.addEventListener("install", (event) => {

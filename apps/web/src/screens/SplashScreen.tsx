@@ -29,14 +29,14 @@ export function SplashScreen({ phase }: SplashScreenProps) {
   return (
     <main
       className={`splash-screen splash-screen-${phase} relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-table`}
-      aria-label="Cargando ¡Lasaña!"
+      aria-label="Cargando Duelo de Lasañas"
     >
       <div className="splash-burst absolute inset-0" aria-hidden="true" />
-      <div className="splash-rays absolute inset-[-35%] opacity-70" aria-hidden="true" />
+      <div className="splash-rays absolute opacity-70" aria-hidden="true" />
       <img
-        src="/assets/ui/logo_lasana_game.png"
-        alt="¡Lasaña!"
-        className="splash-logo relative z-10 w-[min(86vw,30rem)] drop-shadow-[0_14px_0_rgba(74,40,16,0.7)]"
+        src="/assets/ui/logo_duelo_lasanas_splash.png"
+        alt="Duelo de Lasañas"
+        className="splash-logo relative z-10 max-h-[64vh] w-[min(82vw,24rem)] object-contain drop-shadow-[0_14px_0_rgba(74,40,16,0.7)]"
       />
       <p className="splash-copy" aria-live="polite">
         {messages[messageIndex]}

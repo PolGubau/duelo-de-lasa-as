@@ -53,7 +53,7 @@ El juego dura un número fijo de **4 Rondas**. Cada ronda consta de turnos donde
    - Si el jugador no tiene el ingrediente correspondiente o no quiere jugarlo, puede descartar **1 sola carta** de su mano, robar **1 carta** del mazo e intentarla jugar en ese mismo turno si cumple el requisito de la fase.
 3. **Pasar Turno**: Si tras descartar/robar sigue sin poder jugar ingrediente, pierde la oportunidad de añadir capa en esta ronda.
 4. **Jugar Condimentos (Acción Libre)**:
-   - Un jugador puede jugar **tantas cartas de condimento como desee/tenga** en su mano durante su turno (0, 1, 2, 3 o 4).
+   - Un jugador puede jugar hasta **2 condimentos** durante su turno.
    - _Condimentos propios_: Se aplican a la propia lasaña.
    - _Condimentos arrojables_: Se seleccionan y se lanzan a la lasaña de un oponente.
 
@@ -63,7 +63,7 @@ El juego dura un número fijo de **4 Rondas**. Cada ronda consta de turnos donde
 
 Al finalizar las 4 rondas de construcción:
 
-1. **Asignación de Chef**: Cada jugador roba **1 carta de Chef** al azar de la pila reservada boca abajo.
+1. **Elección de Chef**: Cada jugador recibe **2 opciones de Chef** y elige una para su lasaña.
 2. **Fase de Negociación/Comercio**:
    - Implementa una interfaz de intercambio interactiva donde los jugadores pueden negociar y cambiar sus cartas de Chef entre sí si no están satisfechos con el que les tocó.
 

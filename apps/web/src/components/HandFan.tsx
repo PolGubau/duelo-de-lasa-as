@@ -26,6 +26,7 @@ export function HandFan({ hand, selectedIndex, onSelect, isPlayable }: HandFanPr
 
   const center = (hand.length - 1) / 2;
   const spread = Math.min(8, 46 / Math.max(hand.length, 1));
+  const overlap = hand.length <= 4 ? "-1.15rem" : hand.length === 5 ? "-1.75rem" : "-2.1rem";
 
   return (
     <div className="hand-fan relative z-0 flex shrink-0 items-end justify-center px-2 pb-1 pt-6">
@@ -36,7 +37,7 @@ export function HandFan({ hand, selectedIndex, onSelect, isPlayable }: HandFanPr
           <motion.div
             key={`${cardId}_${index}`}
             className="hand-card"
-            style={{ marginLeft: index === 0 ? 0 : "-1.15rem", zIndex: selected ? 30 : index }}
+            style={{ marginLeft: index === 0 ? 0 : overlap, zIndex: selected ? 30 : index }}
             initial={{ y: 260, opacity: 0, rotate: 0, scale: 0.6 }}
             animate={{
               y: Math.abs(offset) * 5 + (selected ? -22 : 0),
@@ -50,10 +51,11 @@ export function HandFan({ hand, selectedIndex, onSelect, isPlayable }: HandFanPr
               damping: 24,
               delay: Math.min(index * 0.07, 0.6),
             }}
+            whileHover={{ zIndex: 40 }}
           >
             <CardView
               card={getCard(cardId)}
-              size="sm"
+              size="hand"
               selected={selected}
               highlighted={isPlayable(cardId)}
               onClick={() => onSelect(index)}

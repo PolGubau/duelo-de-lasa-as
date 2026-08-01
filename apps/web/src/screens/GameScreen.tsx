@@ -23,7 +23,7 @@ export function GameScreen({ onExit }: GameScreenProps) {
 
   return (
     <motion.div
-      className="h-dvh overflow-hidden"
+      className="game-shell h-dvh overflow-hidden"
       key={shake ? feedback.id : "calm"}
       animate={shake ? { x: [0, -10, 9, -6, 4, 0], y: [0, 5, -4, 3, 0, 0] } : { x: 0, y: 0 }}
       transition={{ duration: 0.4 }}

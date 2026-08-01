@@ -2,9 +2,11 @@ import { describe, expect, test } from "vite-plus/test";
 import type { PlayerState } from "../src/index.ts";
 import {
   acceptTrade,
+  buildMainDeck,
   createGame,
   currentPhase,
   currentPlayer,
+  DEFAULT_CONFIG,
   discardAndDraw,
   drawChef,
   endTurn,
@@ -133,6 +135,18 @@ describe("condimentos", () => {
   });
 });
 
+describe("balance del mazo", () => {
+  test("ofrece la misma cantidad de ingredientes para cada fase", () => {
+    const deck = buildMainDeck();
+    const count = (prefix: string) => deck.filter((cardId) => cardId.startsWith(prefix)).length;
+
+    expect(count("relleno_")).toBe(21);
+    expect(count("bechamel_")).toBe(21);
+    expect(count("pasta_")).toBe(21);
+    expect(DEFAULT_CONFIG.maxCondimentsPerTurn).toBe(2);
+  });
+});
+
 describe("partida determinista completa", () => {
   test("la misma semilla produce siempre el mismo reparto inicial", () => {
     const a = makeGame("misma-semilla");
@@ -159,7 +173,12 @@ describe("partida determinista completa", () => {
     expect(state.status).toBe("chefDraw");
 
     for (const player of state.players) {
-      const result = drawChef(state, player.id);
+      const offer = drawChef(state, player.id);
+      expect(offer.ok).toBe(true);
+      if (!offer.ok) continue;
+      state = offer.state;
+      const choice = state.chefChoices[player.id]![0];
+      const result = drawChef(state, player.id, choice);
       expect(result.ok).toBe(true);
       if (result.ok) state = result.state;
     }

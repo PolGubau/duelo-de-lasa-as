@@ -51,7 +51,7 @@ export function HandArea({ state }: HandAreaProps) {
     actions.push({
       key: "play",
       label: "Poner en mi lasaña",
-      variant: "primary",
+      variant: "secondary",
       run: () => playIngredient(selectedId),
     });
   }
@@ -83,7 +83,7 @@ export function HandArea({ state }: HandAreaProps) {
   if (pendingThrowCardId) {
     const card = getCard(pendingThrowCardId);
     return (
-      <div className="flex shrink-0 flex-col items-center gap-2 border-t-3 border-brand-cheese bg-brand-table/90 px-3 py-2">
+      <div className="game-hand-area flex shrink-0 flex-col items-center gap-2 border-t-3 border-brand-cheese bg-brand-table/90 px-3 py-2">
         <p className="text-center font-display text-sm text-brand-cheese">
           Elige a qué rival lanzarle {card.name} ☝️
         </p>
@@ -95,7 +95,7 @@ export function HandArea({ state }: HandAreaProps) {
   }
 
   return (
-    <div className="flex shrink-0 flex-col items-center">
+    <div className="game-hand-area flex shrink-0 flex-col items-center">
       <HandFan
         hand={player.hand}
         selectedIndex={selectedIndex}
@@ -111,17 +111,7 @@ export function HandArea({ state }: HandAreaProps) {
 
       <div className="relative z-40 flex min-h-13 w-full items-center justify-center gap-2 px-2 pb-2">
         <AnimatePresence mode="popLayout" initial={false}>
-          {actions.length === 0 ? (
-            <motion.p
-              key="hint"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="text-center text-[11px] text-brand-bechamel/60"
-            >
-              Toca una carta para ver qué puedes hacer con ella.
-            </motion.p>
-          ) : (
+          {actions.length > 0 && (
             actions.map((action) => (
               <motion.div
                 key={action.key}

@@ -1,12 +1,12 @@
-# GAME BRANDING, DESIGN SYSTEM & VOICE GUIDE: "LASAÑA!"
+# GAME BRANDING, DESIGN SYSTEM & VOICE GUIDE: "DUELO DE LASAÑAS"
 
-Este documento define la identidad visual, la voz del producto, los tokens de diseño (configurados para Tailwind CSS v4) y la lista de assets necesarios para el desarrollo de la interfaz de "Lasaña!". Ninguna decisión estética o de copy debe tomarse fuera de los márgenes aquí estipulados.
+Este documento define la identidad visual, la voz del producto, los tokens de diseño (configurados para Tailwind CSS v4) y la lista de assets necesarios para el desarrollo de la interfaz de "Duelo de Lasañas". Ninguna decisión estética o de copy debe tomarse fuera de los márgenes aquí estipulados.
 
 ---
 
 ## 1. IDENTIDAD Y TONO DE VOZ (GAME VOICE)
 
-- **Nombre Oficial**: `Lasaña!` (con signo de exclamación al final).
+- **Nombre Oficial**: `Duelo de Lasañas`.
 - **Tagline**: _"Construye la capa perfecta. Arruina la de tus amigos."_
 - **Personalidad del Juego**: Divertido, competitivo, caótico, gastronómico y vibrante. Inspirado en el ritmo frenético de _Balatro_, el caos de _Overcooked_ y la picaresca de _Virus!_.
 - **Tono del Copy (Textos en la App)**:
@@ -104,4 +104,8 @@ Las variantes raster del logotipo viven en `apps/web/public/assets/ui/`:
 - `logo_lasana_game.png`: logotipo principal horizontal para la portada.
 - `logo_lasana_game_compact.png`: composición apilada para cabeceras y pantallas estrechas.
 - `logo_lasana_game_light.png`: variante de alto contraste para fondos oscuros o superposiciones.
+- `logo_duelo_lasanas_splash.png`: variante grande con el nombre completo para la splash screen.
+- `icon_duelo_lasanas.png`: icono cuadrado de la lasaña en capas para favicon y aplicaciones instaladas.
+
+Las variantes reducidas comparten el lenguaje material de la splash: pasta horneada, bechamel cremosa, capas de tomate y bordes tostados. Los fondos y superficies de la interfaz deben sugerir esas capas con bandas horizontales suaves, sin convertir la pantalla en una textura ruidosa.
 ```

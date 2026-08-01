@@ -42,7 +42,7 @@ interface GameStore {
   cancelThrow: () => void;
   throwAt: (targetPlayerId: string) => void;
   endTurn: () => void;
-  drawChef: (playerId: string) => void;
+  drawChef: (chefId?: string) => void;
   proposeTrade: (fromPlayerId: string, toPlayerId: string) => void;
   acceptTrade: (tradeId: string) => void;
   rejectTrade: (tradeId: string) => void;
@@ -300,7 +300,7 @@ export const useGameStore = create<GameStore>((set, get) => {
       set({ pendingThrowCardId: null });
     },
     endTurn: () => action("endTurn"),
-    drawChef: () => action("drawChef"),
+    drawChef: (chefId) => action("drawChef", chefId ? { cardId: chefId } : {}),
     proposeTrade: (_fromPlayerId, toPlayerId) =>
       action("proposeTrade", { targetPlayerId: toPlayerId }),
     acceptTrade: (tradeId) => action("acceptTrade", { tradeId }),

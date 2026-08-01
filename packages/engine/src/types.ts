@@ -94,6 +94,8 @@ export interface GameState {
   deck: string[];
   discard: string[];
   chefDeck: string[];
+  /** Dos chefs reservados para cada jugador que haya abierto la selección. */
+  chefChoices: Record<string, string[]>;
   round: number;
   phaseIndex: number;
   turnPlayerIndex: number;

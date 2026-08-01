@@ -1,4 +1,4 @@
-import type { Card, CondimentCard, ChefCard, IngredientCard } from "./types.ts";
+import type { Card, ChefCard, CondimentCard, IngredientCard } from "./types.ts";
 
 // Catálogo declarativo. Nombres de archivo alineados con docs/cards.md.
 
@@ -166,7 +166,7 @@ export const CONDIMENTS: readonly CondimentCard[] = [
     mode: "dual",
     flavor: "dulce",
     selfEffect: { op: "add", value: 2 },
-    throwEffect: { op: "multiply", factor: 0.5 },
+    throwEffect: { op: "multiply", factor: 0.7 },
     image: "card_cond_sugar.png",
   },
   {
@@ -288,11 +288,14 @@ export function getChef(id: string): ChefCard {
 /** Construye el mazo principal (ingredientes + condimentos) con copias repetidas. */
 export function buildMainDeck(): string[] {
   const deck: string[] = [];
-  for (const card of INGREDIENTS) for (let i = 0; i < 6; i++) deck.push(card.id);
+  for (const card of INGREDIENTS) {
+    const copies = card.subtype === "relleno" ? 3 : 7;
+    for (let i = 0; i < copies; i++) deck.push(card.id);
+  }
   for (const card of CONDIMENTS) for (let i = 0; i < 4; i++) deck.push(card.id);
   return deck;
 }
 
 export function buildChefDeck(): string[] {
-  return CHEFS.map((c) => c.id);
+  return CHEFS.flatMap((chef) => [chef.id, chef.id]);
 }

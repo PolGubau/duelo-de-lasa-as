@@ -60,11 +60,45 @@ export function vibrate(pattern: number | number[] = 12): void {
   navigator.vibrate(pattern);
 }
 
-// Bajo "walking" y melodía saltarina en modo swing, al estilo de una banda de
-// dibujos animados de los años 30 (Cuphead): notas cortas, acentos y un
-// pequeño golpe de platillo cada compás para dar sensación de ritmo vivo.
-const BASS_NOTES = [130.81, 130.81, 164.81, 196.0, 174.61, 174.61, 146.83, 196.0];
-const MELODY_NOTES = [523.25, 587.33, 659.25, 587.33, 698.46, 659.25, 587.33, 523.25];
+interface BackgroundMusicPhrase {
+  bass: readonly (number | null)[];
+  melody: readonly (number | null)[];
+  chords: readonly (readonly number[])[];
+  cymbalAccents: readonly number[];
+}
+
+/**
+ * Frases de 16 corcheas para que el tema tenga estrofas, respuesta y puente,
+ * en vez de repetir el mismo compás. Los silencios dejan respirar la melodía.
+ */
+export const BACKGROUND_MUSIC_PHRASES: readonly BackgroundMusicPhrase[] = [
+  {
+    bass: [130.81, 130.81, 164.81, 196, 130.81, null, 164.81, 196, 174.61, 174.61, 220, 196, 146.83, null, 196, 146.83],
+    melody: [523.25, 587.33, 659.25, null, 587.33, 698.46, 659.25, null, 783.99, 698.46, 659.25, 587.33, 523.25, null, 587.33, 523.25],
+    chords: [[261.63, 329.63, 392], [246.94, 293.66, 369.99], [220, 261.63, 329.63], [174.61, 261.63, 349.23]],
+    cymbalAccents: [2, 6, 10, 14],
+  },
+  {
+    bass: [130.81, null, 196, 164.81, 220, 220, 196, null, 174.61, 174.61, 146.83, 196, 130.81, 130.81, 196, null],
+    melody: [659.25, 783.99, 880, 783.99, 659.25, null, 587.33, 659.25, 698.46, 783.99, 698.46, null, 659.25, 587.33, 523.25, 659.25],
+    chords: [[261.63, 329.63, 392], [220, 261.63, 329.63], [174.61, 261.63, 349.23], [196, 246.94, 293.66]],
+    cymbalAccents: [2, 7, 10, 15],
+  },
+  {
+    bass: [174.61, 174.61, 220, 261.63, 196, null, 246.94, 293.66, 130.81, 130.81, 164.81, 196, 146.83, 174.61, 196, null],
+    melody: [698.46, 783.99, 880, null, 987.77, 880, 783.99, 698.46, 659.25, null, 587.33, 659.25, 698.46, 659.25, 587.33, 523.25],
+    chords: [[174.61, 261.63, 349.23], [196, 246.94, 293.66], [261.63, 329.63, 392], [146.83, 220, 293.66]],
+    cymbalAccents: [3, 6, 11, 14],
+  },
+  {
+    bass: [220, null, 261.63, 220, 146.83, 146.83, 174.61, 220, 196, null, 246.94, 293.66, 130.81, 196, 164.81, 130.81],
+    melody: [880, 783.99, 698.46, null, 783.99, 880, 987.77, 880, 783.99, 698.46, 659.25, null, 587.33, 659.25, 698.46, 783.99],
+    chords: [[220, 261.63, 329.63], [146.83, 220, 293.66], [196, 246.94, 293.66], [261.63, 329.63, 392]],
+    cymbalAccents: [2, 5, 10, 13],
+  },
+];
+
+const PHRASE_ORDER = [0, 1, 0, 2, 0, 1, 3, 2] as const;
 
 /** Intenta reproducir una pista propia; si no existe, activa el tema sintetizado. */
 export function startMusic(): void {
@@ -95,20 +129,37 @@ function startCustomTrack(): boolean {
   return true;
 }
 
-/** Tema animado tipo swing sintetizado con la Web Audio API. */
+/** Tema animado de swing sintetizado, con una estructura AABA ampliada. */
 function startSynthMusic(): void {
   let step = 0;
   const tick = () => {
     const audio = getContext();
     if (!audio) return;
     const now = audio.currentTime;
-    const swing = step % 2 === 0 ? 1 : 0.65;
-    const bass = BASS_NOTES[step % BASS_NOTES.length]!;
-    const melody = MELODY_NOTES[step % MELODY_NOTES.length]!;
-    tone(audio, bass, now, 0.32 * swing, 0.05 * settings.musicVolume, "square");
-    tone(audio, melody, now + 0.02, 0.26 * swing, 0.045 * settings.musicVolume, "triangle");
-    if (step % 4 === 2) {
-      tone(audio, 2200, now, 0.045, 0.02 * settings.musicVolume, "square");
+    const phraseStep = step % 16;
+    const phrasePosition = Math.floor(step / 16) % PHRASE_ORDER.length;
+    const phrase = BACKGROUND_MUSIC_PHRASES[PHRASE_ORDER[phrasePosition]!]!;
+    const swing = phraseStep % 2 === 0 ? 1 : 0.65;
+    const bass = phrase.bass[phraseStep]!;
+    const melody = phrase.melody[phraseStep]!;
+
+    if (bass !== null) {
+      tone(audio, bass, now, 0.3 * swing, 0.047 * settings.musicVolume, "square");
+    }
+    if (melody !== null) {
+      tone(audio, melody, now + 0.025, 0.24 * swing, 0.042 * settings.musicVolume, "triangle");
+    }
+    if (phraseStep % 4 === 0) {
+      const chord = phrase.chords[phraseStep / 4]!;
+      for (const note of chord) {
+        tone(audio, note, now + 0.01, 0.5, 0.012 * settings.musicVolume, "sine");
+      }
+    }
+    if (phraseStep === 0 || phraseStep === 8) {
+      tone(audio, 73.42, now, 0.12, 0.025 * settings.musicVolume, "sine");
+    }
+    if (phrase.cymbalAccents.includes(phraseStep)) {
+      tone(audio, 2200, now, 0.04, 0.016 * settings.musicVolume, "square");
     }
     step += 1;
   };

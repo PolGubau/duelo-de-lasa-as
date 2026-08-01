@@ -5,7 +5,7 @@ import { useGameStore } from "../store/gameStore.ts";
 
 /** Cues que merecen una splash a pantalla completa; el resto se queda en el toast. */
 const SPLASH: Partial<Record<SoundCue, { icon: string; title: string; color: string }>> = {
-  attack: { icon: "⚡", title: "¡Zasca!", color: "var(--color-brand-tomato)" },
+  attack: { icon: "⚡", title: "¡Al ataque!", color: "var(--color-brand-tomato)" },
   chef: { icon: "👨‍🍳", title: "¡Chef!", color: "var(--color-brand-basil)" },
   score: { icon: "✨", title: "¡Puntos!", color: "var(--color-brand-cheese)" },
   win: { icon: "🏆", title: "¡Victoria!", color: "var(--color-brand-cheese)" },
@@ -76,7 +76,7 @@ export function ActionSplash() {
             }
           />
           <motion.div
-            className="splash-rays absolute h-[140vmax] w-[140vmax] opacity-40"
+            className="splash-rays absolute opacity-40"
             initial={{ scale: 0.4 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}

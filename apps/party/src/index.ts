@@ -35,6 +35,19 @@ export interface Env {
 
 const CODE = /^[A-Z0-9]{4}$/;
 
+/** Explica el efecto de un condimento lanzado para que el ataque sea comprensible. */
+function thrownCondimentMessage(cardId?: string): string | undefined {
+  if (!cardId) return undefined;
+  const card = getCard(cardId);
+  if (card.kind !== "condiment" || !card.throwEffect) return undefined;
+
+  const effect = card.throwEffect;
+  if (effect.op === "add") {
+    return `${effect.value >= 0 ? "suma" : "resta"} ${Math.abs(effect.value)} puntos.`;
+  }
+  return `multiplica el total ×${String(effect.factor).replace(".", ",")}.`;
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -49,6 +62,13 @@ export default {
 };
 
 type Session = { playerId: string; ws: WebSocket };
+type SessionAttachment = Pick<Session, "playerId">;
+
+function sessionAttachment(value: unknown): SessionAttachment | null {
+  if (!value || typeof value !== "object" || !("playerId" in value)) return null;
+  const playerId = (value as { playerId?: unknown }).playerId;
+  return typeof playerId === "string" ? { playerId } : null;
+}
 
 /** Capa anónima que sustituye a las capas rivales en las salas secretas. */
 const HIDDEN_LAYER: LayerEvent = {
@@ -66,6 +86,14 @@ export class LasanaRoom extends DurableObject<Env> {
   private state: GameState | null = null;
   private options: RoomOptions = { visibility: "public" };
   private loaded = false;
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    for (const ws of ctx.getWebSockets()) {
+      const attachment = sessionAttachment(ws.deserializeAttachment());
+      if (attachment) this.sessions.set(ws, { ...attachment, ws });
+    }
+  }
 
   private async ensureLoaded(): Promise<void> {
     if (this.loaded) return;
@@ -153,6 +181,7 @@ export class LasanaRoom extends DurableObject<Env> {
     player.connected = true;
     this.players.set(playerId, player);
     this.sessions.set(ws, { playerId, ws });
+    ws.serializeAttachment({ playerId } satisfies SessionAttachment);
     void this.persist();
     this.send(ws, { type: "joined", sessionId: playerId, room: this.snapshot() });
     this.broadcast({ type: "room", room: this.snapshot() });
@@ -228,7 +257,7 @@ export class LasanaRoom extends DurableObject<Env> {
         result = endTurn(state, playerId);
         break;
       case "drawChef":
-        result = drawChef(state, playerId);
+        result = drawChef(state, playerId, message.cardId);
         break;
       case "proposeTrade":
         result = proposeTrade(state, playerId, message.targetPlayerId ?? "");
@@ -249,7 +278,13 @@ export class LasanaRoom extends DurableObject<Env> {
     if (!result.ok) return this.reject(playerId, result.reason);
     this.state = result.state;
     void this.persist();
-    const event = this.eventFor(message.action, playerId, message.cardId, message.targetPlayerId);
+    const event = this.eventFor(
+      message.action,
+      playerId,
+      message.cardId,
+      message.targetPlayerId,
+      message.tradeId,
+    );
     this.broadcastState(event);
   }
 
@@ -258,12 +293,19 @@ export class LasanaRoom extends DurableObject<Env> {
     playerId: string,
     cardId?: string,
     targetPlayerId?: string,
+    tradeId?: string,
   ): ServerEvent {
     const cardName = cardId && this.state ? getCard(cardId).name : "";
+    const actorName = this.state?.players.find((player) => player.id === playerId)?.name ?? "Un jugador";
+    const targetName = targetPlayerId
+      ? (this.state?.players.find((player) => player.id === targetPlayerId)?.name ?? "un rival")
+      : "un rival";
+    const isAttack =
+      action === "playCondiment" && Boolean(targetPlayerId && targetPlayerId !== playerId);
     const map = {
       playIngredient: "play",
       discardAndDraw: "discard",
-      playCondiment: "attack",
+      playCondiment: isAttack ? "attack" : "play",
       endTurn: "turn",
       drawChef: "chef",
       proposeTrade: "trade",
@@ -272,14 +314,39 @@ export class LasanaRoom extends DurableObject<Env> {
       finishTrading: "score",
       finishScoring: "score",
     } as const;
+    const message = (() => {
+      switch (action) {
+        case "playIngredient":
+          return `${actorName} coloca ${cardName} en su lasaña.`;
+        case "discardAndDraw":
+          return `${actorName} descarta una carta y roba otra.`;
+        case "playCondiment":
+          if (isAttack)
+            return `${actorName} lanza ${cardName} a ${targetName}: ${thrownCondimentMessage(cardId) ?? "ataque aplicado."}`;
+          return `${actorName} añade ${cardName} a su lasaña.`;
+        case "endTurn":
+          return `${actorName} termina su turno.`;
+        case "drawChef":
+          return cardName
+            ? `${actorName} elige a ${cardName} como chef.`
+            : `${actorName} abre sus dos opciones de chef.`;
+        case "proposeTrade":
+          return `${actorName} propone intercambiar chef con ${targetName}.`;
+        case "acceptTrade":
+          return `${actorName} acepta el intercambio de chef.`;
+        case "rejectTrade":
+          return `${actorName} rechaza el intercambio de chef.`;
+        case "finishTrading":
+          return "Se cierra el intercambio. Calculando puntuaciones…";
+        case "finishScoring":
+          return "Puntuaciones calculadas.";
+      }
+    })();
     return {
       kind: map[action],
-      message: cardName ? `${cardName} resuelto` : "Acción resuelta",
+      message,
       playerId,
-      targetPlayerId:
-        action === "playCondiment" && targetPlayerId && targetPlayerId !== playerId
-          ? targetPlayerId
-          : undefined,
+      targetPlayerId: isAttack ? targetPlayerId : undefined,
     };
   }
 
@@ -316,14 +383,17 @@ export class LasanaRoom extends DurableObject<Env> {
       deck: [],
       discard: [],
       chefDeck: [],
+      chefChoices: state.chefChoices[playerId]
+        ? { [playerId]: [...state.chefChoices[playerId]] }
+        : {},
       players: state.players.map((player) =>
         player.id === playerId
           ? { ...player, hand: [...player.hand] }
           : {
-              ...player,
-              hand: player.hand.map((_, index) => `hidden_${index}`),
-              lasagna: hideLayers ? player.lasagna.map(() => HIDDEN_LAYER) : [...player.lasagna],
-            },
+            ...player,
+            hand: player.hand.map((_, index) => `hidden_${index}`),
+            lasagna: hideLayers ? player.lasagna.map(() => HIDDEN_LAYER) : [...player.lasagna],
+          },
       ),
     };
   }

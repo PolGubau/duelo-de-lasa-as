@@ -1,7 +1,6 @@
 import {
   Check,
   Clipboard,
-  Clock3,
   Crown,
   Eye,
   EyeOff,
@@ -77,6 +76,12 @@ export function LobbyView({ onExit }: LobbyViewProps) {
     setMobileTab(tab);
   }
 
+  function exitRoom(): void {
+    playSound("close");
+    vibrate(10);
+    onExit();
+  }
+
   return (
     <div className="lobby-shell min-h-screen overflow-x-hidden px-3 py-3 sm:px-6 sm:py-5">
       <FeedbackToast />
@@ -86,17 +91,13 @@ export function LobbyView({ onExit }: LobbyViewProps) {
         <header className="lobby-header">
           <img
             src="/assets/ui/logo_lasana_game.png"
-            alt="¡Lasaña!"
+            alt="Duelo de Lasañas"
             className="h-8 w-auto drop-shadow-[0_3px_0_rgba(74,40,16,0.7)] sm:h-10"
           />
           <button
             type="button"
             className="lobby-exit"
-            onClick={() => {
-              playSound("close");
-              vibrate(10);
-              onExit();
-            }}
+            onClick={exitRoom}
             aria-label="Salir de la sala"
           >
             <LogOut size={16} aria-hidden="true" /> Salir
@@ -106,12 +107,20 @@ export function LobbyView({ onExit }: LobbyViewProps) {
         <main className="lobby-layout grid gap-4 lg:grid-cols-[1.12fr_0.88fr]">
           <section className="flex flex-col gap-4">
             <div className="lobby-room-card">
-              <h1 className="font-display text-xl text-brand-bechamel sm:text-3xl">
-                Código de sala
-              </h1>
+              <div className="lobby-room-intro">
+                <div>
+                  <p className="lobby-eyebrow">Tu mesa está servida</p>
+                  <h1 className="font-display text-xl text-brand-bechamel sm:text-2xl">
+                    Invita a tus rivales
+                  </h1>
+                </div>
+                <button type="button" className="lobby-room-exit" onClick={exitRoom}>
+                  <LogOut size={15} aria-hidden="true" /> Salir
+                </button>
+              </div>
               <button
                 type="button"
-                className="lobby-code-tile mt-4"
+                className="lobby-code-tile mt-3"
                 onClick={() => copy(room.code, "code")}
                 aria-describedby="room-code-help"
                 aria-label={`Copiar el código de sala ${room.code}`}
@@ -131,7 +140,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
                       ? "No se pudo copiar. Prueba de nuevo"
                       : "Toca el código para copiarlo"}
               </p>
-              <div className="mt-4 flex justify-center gap-2">
+              <div className="lobby-share-actions mt-3 flex justify-center gap-2">
                 <Button size="sm" variant="ghost" onClick={() => copy(inviteUrl, "link")}>
                   <Clipboard size={15} className="mr-1.5 inline" /> Copiar enlace
                 </Button>
@@ -181,43 +190,43 @@ export function LobbyView({ onExit }: LobbyViewProps) {
                   <b>/6</b>
                 </span>
               </div>
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="lobby-seats">
                 {room.players.map((player) => (
                   <div
                     key={player.id}
-                    className={`lobby-player ${player.id === sessionId ? "lobby-player-self" : ""}`}
+                    className={`lobby-seat ${player.id === sessionId ? "lobby-seat-self" : ""}`}
                   >
-                    <Avatar id={player.id} name={player.name} size="md" />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-display text-base">{player.name}</p>
-                      <p className="text-[10px] uppercase tracking-wider text-brand-bechamel/50">
-                        {player.isHost ? (
-                          <>
-                            <Crown size={11} className="mr-1 inline text-brand-cheese" /> Chef de
-                            mesa
-                          </>
-                        ) : player.id === sessionId ? (
-                          "Tu sitio"
-                        ) : (
-                          "Comensal"
-                        )}
-                      </p>
+                    <div className="lobby-seat-avatar">
+                      <Avatar id={player.id} name={player.name} size="md" />
+                      {player.ready && (
+                        <span className="lobby-seat-check" aria-label="Listo">
+                          <Check size={10} />
+                        </span>
+                      )}
                     </div>
+                    <p className="max-w-full truncate font-display text-sm">{player.name}</p>
+                    <p className="lobby-seat-role">
+                      {player.isHost ? (
+                        <>
+                          <Crown size={10} className="mr-1 inline text-brand-cheese" /> Anfitrión
+                        </>
+                      ) : player.id === sessionId ? (
+                        "Tú"
+                      ) : (
+                        "Comensal"
+                      )}
+                    </p>
                     {player.ready ? (
-                      <span className="lobby-ready">
-                        <Check size={13} /> Listo
-                      </span>
+                      <span className="lobby-seat-status is-ready">Listo</span>
                     ) : (
-                      <span className="lobby-waiting">
-                        <Clock3 size={13} /> Pendiente
-                      </span>
+                      <span className="lobby-seat-status">Esperando</span>
                     )}
                   </div>
                 ))}
                 {Array.from({ length: Math.max(0, 6 - room.players.length) }).map((_, index) => (
-                  <div key={`empty-${index}`} className="lobby-player lobby-player-empty">
+                  <div key={`empty-${index}`} className="lobby-seat lobby-seat-empty">
                     <span>+</span>
-                    <small>Hueco libre</small>
+                    <small>Libre</small>
                   </div>
                 ))}
               </div>
@@ -269,7 +278,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
             </section>
 
             <section
-              className="lobby-panel lobby-tab-content flex min-h-[220px] flex-col"
+              className="lobby-panel lobby-tab-content flex min-h-[170px] flex-col"
               data-tab="table"
               data-active={mobileTab === "table"}
             >
@@ -301,7 +310,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
                   Reconectando: el chat estará disponible enseguida.
                 </p>
               )}
-              <div className="mt-3 flex flex-1 flex-col gap-1 overflow-y-auto rounded-xl bg-black/10 p-2 text-xs">
+              <div className="lobby-chat-history mt-3 flex flex-1 flex-col gap-1 overflow-y-auto text-xs">
                 {chat.length === 0 ? (
                   <p className="m-auto text-center text-pretty text-brand-bechamel/40">
                     Manda un emoji para romper el hielo.
@@ -328,21 +337,21 @@ export function LobbyView({ onExit }: LobbyViewProps) {
           <div className="flex gap-2">
             <Button
               size="sm"
-              className="min-h-10 px-3 text-sm"
+              className="lobby-ready-cta min-h-10 px-3 text-sm"
               disabled={connection !== "connected"}
               variant={me?.ready ? "ghost" : "secondary"}
               onClick={toggleReady}
             >
-              {me?.ready ? "No listo" : "Listo"}
+              {me?.ready ? "No estoy listo" : "Estoy listo"}
             </Button>
             {isHost && (
               <Button
                 size="sm"
-                className={cn("min-h-10 px-3 text-sm", canStart && "animate-target")}
+                className={cn("lobby-start-cta min-h-10 px-3 text-sm", canStart && "animate-target")}
                 disabled={!canStart || connection !== "connected"}
                 onClick={startRoom}
               >
-                <Play size={15} className="mr-1 inline fill-current" /> Empezar
+                <Play size={15} className="mr-1 inline fill-current" /> Empezar partida
               </Button>
             )}
           </div>

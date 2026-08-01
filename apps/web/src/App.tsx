@@ -91,14 +91,15 @@ export default function App() {
   }
 
   useEffect(() => {
-    const exitTimer = window.setTimeout(() => setSplashPhase("exit"), 900);
+    const bootSplash = document.getElementById("boot-splash");
+    bootSplash?.classList.add("boot-splash-hidden");
+    const bootSplashTimer = window.setTimeout(() => bootSplash?.remove(), 400);
+    const exitTimer = window.setTimeout(() => setSplashPhase("exit"), 3500);
     const finishTimer = window.setTimeout(() => {
       setSplashPhase("done");
-      const bootSplash = document.getElementById("boot-splash");
-      bootSplash?.classList.add("boot-splash-hidden");
-      window.setTimeout(() => bootSplash?.remove(), 400);
-    }, 1320);
+    }, 4000);
     return () => {
+      window.clearTimeout(bootSplashTimer);
       window.clearTimeout(exitTimer);
       window.clearTimeout(finishTimer);
     };
@@ -132,7 +133,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-brand-table">
+    <div className="bg-brand-table">
       {splashPhase !== "done" ? (
         <SplashScreen phase={splashPhase} />
       ) : route.kind === "room" ? (

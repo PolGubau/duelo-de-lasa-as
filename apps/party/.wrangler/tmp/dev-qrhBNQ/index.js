@@ -182,7 +182,7 @@ var CONDIMENTS = [
     },
     throwEffect: {
       op: "multiply",
-      factor: 0.5
+      factor: 0.7
     },
     image: "card_cond_sugar.png"
   },
@@ -336,13 +336,16 @@ function getChef(id) {
 __name(getChef, "getChef");
 function buildMainDeck() {
   const deck = [];
-  for (const card of INGREDIENTS) for (let i = 0; i < 6; i++) deck.push(card.id);
+  for (const card of INGREDIENTS) {
+    const copies = card.subtype === "relleno" ? 3 : 7;
+    for (let i = 0; i < copies; i++) deck.push(card.id);
+  }
   for (const card of CONDIMENTS) for (let i = 0; i < 4; i++) deck.push(card.id);
   return deck;
 }
 __name(buildMainDeck, "buildMainDeck");
 function buildChefDeck() {
-  return CHEFS.map((c) => c.id);
+  return CHEFS.flatMap((chef) => [chef.id, chef.id]);
 }
 __name(buildChefDeck, "buildChefDeck");
 function mulberry32(state) {
@@ -474,7 +477,7 @@ var DEFAULT_CONFIG = {
   roundsCount: 4,
   handSize: 4,
   drawToHandSize: 4,
-  maxCondimentsPerTurn: 4,
+  maxCondimentsPerTurn: 2,
   visibility: "public"
 };
 function createGame(players, options) {
@@ -508,6 +511,7 @@ function createGame(players, options) {
     deck,
     discard: [],
     chefDeck,
+    chefChoices: {},
     round: 1,
     phaseIndex: 0,
     turnPlayerIndex: 0,
@@ -702,18 +706,41 @@ function endTurn(state, playerId) {
   };
 }
 __name(endTurn, "endTurn");
-function drawChef(state, playerId) {
+function drawChef(state, playerId, chefId) {
   if (state.status !== "chefDraw") return fail(state, "No es momento de repartir chefs.");
   const player = state.players.find((p) => p.id === playerId);
   if (!player) return fail(state, "Jugador desconocido.");
   if (player.chefId) return fail(state, "Ya tienes un chef asignado.");
-  if (state.chefDeck.length === 0) return fail(state, "No quedan chefs por repartir.");
+  const choices = state.chefChoices[playerId];
+  if (!choices) {
+    if ([...new Set(state.chefDeck)].length < 2) return fail(state, "No quedan suficientes chefs para elegir.");
+    const next2 = clone(state);
+    const offered = [];
+    let available = [...new Set(next2.chefDeck)];
+    for (let i = 0; i < 2; i++) {
+      const [rngState, index] = randomInt(next2.rngState, available.length);
+      next2.rngState = rngState;
+      const offeredChefId = available[index];
+      offered.push(offeredChefId);
+      next2.chefDeck.splice(next2.chefDeck.indexOf(offeredChefId), 1);
+      available = available.filter((id) => id !== offeredChefId);
+    }
+    next2.chefChoices = {
+      ...next2.chefChoices,
+      [playerId]: offered
+    };
+    next2.log.push(`${player.name} recibe dos opciones de chef.`);
+    return {
+      ok: true,
+      state: next2
+    };
+  }
+  if (!chefId || !choices.includes(chefId)) return fail(state, "Elige uno de los chefs que te han ofrecido.");
   const next = clone(state);
-  const [rngState, index] = randomInt(next.rngState, next.chefDeck.length);
-  next.rngState = rngState;
-  const chefId = next.chefDeck.splice(index, 1)[0];
   const actor = next.players.find((p) => p.id === playerId);
   actor.chefId = chefId;
+  const { [playerId]: _chosen, ...remainingChoices } = next.chefChoices;
+  next.chefChoices = remainingChoices;
   next.log.push(`${actor.name} recibe al chef ${getChef(chefId).name}.`);
   if (next.players.every((p) => p.chefId)) {
     next.status = "trading";
@@ -864,6 +891,17 @@ __name(parseClientMessage, "parseClientMessage");
 
 // src/index.ts
 var CODE = /^[A-Z0-9]{4}$/;
+function thrownCondimentMessage(cardId) {
+  if (!cardId) return void 0;
+  const card = getCard(cardId);
+  if (card.kind !== "condiment" || !card.throwEffect) return void 0;
+  const effect = card.throwEffect;
+  if (effect.op === "add") {
+    return `${effect.value >= 0 ? "suma" : "resta"} ${Math.abs(effect.value)} puntos.`;
+  }
+  return `multiplica el total \xD7${String(effect.factor).replace(".", ",")}.`;
+}
+__name(thrownCondimentMessage, "thrownCondimentMessage");
 var src_default = {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -876,6 +914,12 @@ var src_default = {
     return env.LASANA_ROOMS.get(env.LASANA_ROOMS.idFromName(code)).fetch(request);
   }
 };
+function sessionAttachment(value) {
+  if (!value || typeof value !== "object" || !("playerId" in value)) return null;
+  const playerId = value.playerId;
+  return typeof playerId === "string" ? { playerId } : null;
+}
+__name(sessionAttachment, "sessionAttachment");
 var HIDDEN_LAYER = {
   cardId: HIDDEN_LAYER_ID,
   cardName: "Capa oculta",
@@ -893,6 +937,13 @@ var LasanaRoom = class extends DurableObject {
   state = null;
   options = { visibility: "public" };
   loaded = false;
+  constructor(ctx, env) {
+    super(ctx, env);
+    for (const ws of ctx.getWebSockets()) {
+      const attachment = sessionAttachment(ws.deserializeAttachment());
+      if (attachment) this.sessions.set(ws, { ...attachment, ws });
+    }
+  }
   async ensureLoaded() {
     if (this.loaded) return;
     const saved = await this.ctx.storage.get("room");
@@ -967,6 +1018,7 @@ var LasanaRoom = class extends DurableObject {
     player.connected = true;
     this.players.set(playerId, player);
     this.sessions.set(ws, { playerId, ws });
+    ws.serializeAttachment({ playerId });
     void this.persist();
     this.send(ws, { type: "joined", sessionId: playerId, room: this.snapshot() });
     this.broadcast({ type: "room", room: this.snapshot() });
@@ -1031,7 +1083,7 @@ var LasanaRoom = class extends DurableObject {
         result = endTurn(state, playerId);
         break;
       case "drawChef":
-        result = drawChef(state, playerId);
+        result = drawChef(state, playerId, message.cardId);
         break;
       case "proposeTrade":
         result = proposeTrade(state, playerId, message.targetPlayerId ?? "");
@@ -1052,15 +1104,24 @@ var LasanaRoom = class extends DurableObject {
     if (!result.ok) return this.reject(playerId, result.reason);
     this.state = result.state;
     void this.persist();
-    const event = this.eventFor(message.action, playerId, message.cardId, message.targetPlayerId);
+    const event = this.eventFor(
+      message.action,
+      playerId,
+      message.cardId,
+      message.targetPlayerId,
+      message.tradeId
+    );
     this.broadcastState(event);
   }
-  eventFor(action, playerId, cardId, targetPlayerId) {
+  eventFor(action, playerId, cardId, targetPlayerId, tradeId) {
     const cardName = cardId && this.state ? getCard(cardId).name : "";
+    const actorName = this.state?.players.find((player) => player.id === playerId)?.name ?? "Un jugador";
+    const targetName = targetPlayerId ? this.state?.players.find((player) => player.id === targetPlayerId)?.name ?? "un rival" : "un rival";
+    const isAttack = action === "playCondiment" && Boolean(targetPlayerId && targetPlayerId !== playerId);
     const map = {
       playIngredient: "play",
       discardAndDraw: "discard",
-      playCondiment: "attack",
+      playCondiment: isAttack ? "attack" : "play",
       endTurn: "turn",
       drawChef: "chef",
       proposeTrade: "trade",
@@ -1069,11 +1130,37 @@ var LasanaRoom = class extends DurableObject {
       finishTrading: "score",
       finishScoring: "score"
     };
+    const message = (() => {
+      switch (action) {
+        case "playIngredient":
+          return `${actorName} coloca ${cardName} en su lasa\xF1a.`;
+        case "discardAndDraw":
+          return `${actorName} descarta una carta y roba otra.`;
+        case "playCondiment":
+          if (isAttack)
+            return `${actorName} lanza ${cardName} a ${targetName}: ${thrownCondimentMessage(cardId) ?? "ataque aplicado."}`;
+          return `${actorName} a\xF1ade ${cardName} a su lasa\xF1a.`;
+        case "endTurn":
+          return `${actorName} termina su turno.`;
+        case "drawChef":
+          return cardName ? `${actorName} elige a ${cardName} como chef.` : `${actorName} abre sus dos opciones de chef.`;
+        case "proposeTrade":
+          return `${actorName} propone intercambiar chef con ${targetName}.`;
+        case "acceptTrade":
+          return `${actorName} acepta el intercambio de chef.`;
+        case "rejectTrade":
+          return `${actorName} rechaza el intercambio de chef.`;
+        case "finishTrading":
+          return "Se cierra el intercambio. Calculando puntuaciones\u2026";
+        case "finishScoring":
+          return "Puntuaciones calculadas.";
+      }
+    })();
     return {
       kind: map[action],
-      message: cardName ? `${cardName} resuelto` : "Acci\xF3n resuelta",
+      message,
       playerId,
-      targetPlayerId: action === "playCondiment" && targetPlayerId && targetPlayerId !== playerId ? targetPlayerId : void 0
+      targetPlayerId: isAttack ? targetPlayerId : void 0
     };
   }
   async leave(ws) {
@@ -1103,6 +1190,7 @@ var LasanaRoom = class extends DurableObject {
       deck: [],
       discard: [],
       chefDeck: [],
+      chefChoices: state.chefChoices[playerId] ? { [playerId]: [...state.chefChoices[playerId]] } : {},
       players: state.players.map(
         (player) => player.id === playerId ? { ...player, hand: [...player.hand] } : {
           ...player,
@@ -1175,7 +1263,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env, _ctx, middlewareCtx)
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-W5WxF3/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-rjyfKh/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -1207,7 +1295,7 @@ function __facade_invoke__(request, env, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-W5WxF3/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-rjyfKh/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;
