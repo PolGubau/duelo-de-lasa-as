@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/sala/:path*", "destination": "/index.html" },
+    { "source": "/tutorial", "destination": "/index.html" }
+  ]
+}
