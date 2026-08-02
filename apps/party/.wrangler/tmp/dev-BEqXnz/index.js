@@ -302,6 +302,17 @@ var CHEFS = [
       factor: 1.15
     },
     image: "card_chef_lidia.png"
+  },
+  {
+    kind: "chef",
+    id: "chef_galvez",
+    name: "G\xE1lvez",
+    description: "Suma 3 puntos por cada tipo de capa diferente que hayas colocado (m\xE1x. +9).",
+    effect: {
+      kind: "addPerDifferentLayerType",
+      value: 3
+    },
+    image: "card_chef_galvez.png"
   }
 ];
 var ALL_CARDS = [
@@ -426,6 +437,18 @@ function scorePlayer(player) {
       case "addPerLayerType": {
         const { subtype, value } = chef.effect;
         const bonus = player.lasagna.filter((l) => l.origin === "own" && l.subtype === subtype).length * value;
+        acc = before + bonus;
+        chefStep = {
+          label: chef.name,
+          op: "add",
+          value: bonus,
+          before,
+          after: acc
+        };
+        break;
+      }
+      case "addPerDifferentLayerType": {
+        const bonus = new Set(player.lasagna.filter((l) => l.origin === "own" && l.subtype !== void 0).map((l) => l.subtype)).size * chef.effect.value;
         acc = before + bonus;
         chefStep = {
           label: chef.name,
