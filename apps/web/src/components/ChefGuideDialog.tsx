@@ -7,6 +7,7 @@ interface ChefGuideDialogProps {
   onClose: () => void;
 }
 
+
 /** Guía consultable antes de empezar una partida. */
 export function ChefGuideDialog({ open, onClose }: ChefGuideDialogProps) {
   return (
