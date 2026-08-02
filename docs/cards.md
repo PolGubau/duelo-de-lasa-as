@@ -51,6 +51,7 @@ Ubicación de assets en el proyecto: `public/assets/cards/` y `public/assets/ui/
 | `card_chef_dama.png`   | Dama      | Perro Yorkshire terrier disfrazado de chef degustando copa de vino. |
 | `card_chef_joan.png`   | Joan      | Chef rallando queso sobre una tabla de madera.                      |
 | `card_chef_lidia.png`  | Lidia     | Chef sentada disfrutando de copa de vino y buena cocina.            |
+| `card_chef_galvez.png` | Gálvez    | Chef montando capas de lasaña con regla y nivel de cocina.          |
 
 ---
 

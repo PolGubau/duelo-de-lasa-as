@@ -53,6 +53,17 @@ export function scorePlayer(player: PlayerState): PlayerScore {
         chefStep = { label: chef.name, op: "add", value: bonus, before, after: acc };
         break;
       }
+      case "addPerDifferentLayerType": {
+        const layerTypes = new Set(
+          player.lasagna
+            .filter((l) => l.origin === "own" && l.subtype !== undefined)
+            .map((l) => l.subtype),
+        );
+        const bonus = layerTypes.size * chef.effect.value;
+        acc = before + bonus;
+        chefStep = { label: chef.name, op: "add", value: bonus, before, after: acc };
+        break;
+      }
       case "addPerCondimentPlayed": {
         const count = player.lasagna.filter(
           (l) => l.origin === "own" && l.subtype === undefined,

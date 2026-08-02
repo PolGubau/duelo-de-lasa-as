@@ -255,6 +255,14 @@ export const CHEFS: readonly ChefCard[] = [
     effect: { kind: "multiplyTotal", factor: 1.15 },
     image: "card_chef_lidia.png",
   },
+  {
+    kind: "chef",
+    id: "chef_galvez",
+    name: "Gálvez",
+    description: "Suma 3 puntos por cada tipo de capa diferente que hayas colocado (máx. +9).",
+    effect: { kind: "addPerDifferentLayerType", value: 3 },
+    image: "card_chef_galvez.png",
+  },
 ];
 
 export const ALL_CARDS: readonly Card[] = [...INGREDIENTS, ...CONDIMENTS, ...CHEFS];

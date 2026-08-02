@@ -35,6 +35,7 @@ export type ChefEffectSpec =
   | { kind: "multiplyTotal"; factor: number }
   | { kind: "addFlat"; value: number }
   | { kind: "addPerLayerType"; subtype: IngredientSubtype; value: number }
+  | { kind: "addPerDifferentLayerType"; value: number }
   | { kind: "addPerCondimentPlayed"; value: number };
 
 export interface ChefCard {
