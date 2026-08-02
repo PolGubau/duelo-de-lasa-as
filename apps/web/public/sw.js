@@ -1,4 +1,4 @@
-const CACHE = "lasana-v6";
+const CACHE = "lasana-v7";
 const PRECACHE = [
   "/",
   "/index.html",
