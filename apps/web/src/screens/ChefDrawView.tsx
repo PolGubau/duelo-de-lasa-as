@@ -149,6 +149,9 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
               >
+                <p className="absolute -top-7 text-center text-xs text-brand-bechamel/75">
+                  Toca el ? para ver cada efecto antes de elegir.
+                </p>
                 {choices.map((chefId) => {
                   const chef = getChef(chefId);
                   return (
@@ -159,7 +162,6 @@ export function ChefDrawView({ state }: ChefDrawViewProps) {
                       <CardView
                         card={chef}
                         size="md"
-                        hideInfo
                         onClick={() => chooseChef(chefId)}
                       />
                       <span className="mt-1 block max-w-22 text-center text-xs text-brand-cheese">

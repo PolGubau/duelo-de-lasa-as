@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "../components/Button.tsx";
+import { ChefGuideDialog } from "../components/ChefGuideDialog.tsx";
 import { IngredientRain } from "../components/IngredientRain.tsx";
 import { OptionsDialog } from "../components/OptionsDialog.tsx";
 import { useInstallPrompt } from "../lib/pwa.ts";
@@ -19,10 +20,12 @@ export function HomeScreen({
   initialRoomCode,
   onRoomJoinDismiss,
 }: HomeScreenProps) {
-  const [dialog, setDialog] = useState<"play" | "options" | null>(initialRoomCode ? "play" : null);
+  const [dialog, setDialog] = useState<"play" | "chefs" | "options" | null>(
+    initialRoomCode ? "play" : null,
+  );
   const { canInstall, install } = useInstallPrompt();
 
-  function open(next: "play" | "options"): void {
+  function open(next: "play" | "chefs" | "options"): void {
     playSound("select");
     startMusic();
     setDialog(next);
@@ -68,6 +71,9 @@ export function HomeScreen({
           <Button variant="secondary" className="py-4 text-xl" onClick={() => open("options")}>
             Opciones
           </Button>
+          <Button variant="ghost" className="py-3 text-base" onClick={() => open("chefs")}>
+            Descubre los chefs
+          </Button>
           <Button
             variant="ghost"
             className="py-4 text-xl"
@@ -89,6 +95,7 @@ export function HomeScreen({
             onRoomJoinDismiss?.();
           }}
         />
+        <ChefGuideDialog open={dialog === "chefs"} onClose={() => setDialog(null)} />
         <OptionsDialog open={dialog === "options"} onClose={() => setDialog(null)} />
       </div>
     </div>

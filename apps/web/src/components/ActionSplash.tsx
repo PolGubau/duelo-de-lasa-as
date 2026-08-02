@@ -1,5 +1,13 @@
+import {
+  getChef,
+  scoreGame,
+  type ChefCard,
+  type GameState,
+  type PlayerState,
+} from "@lasana/engine";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { cardImageSrc } from "../lib/cardImages.ts";
 import type { SoundCue } from "../lib/sound.ts";
 import { useGameStore } from "../store/gameStore.ts";
 
@@ -13,13 +21,39 @@ const SPLASH: Partial<Record<SoundCue, { icon: string; title: string; color: str
 
 const ACTION_DURATION = 3400;
 
+/** Devuelve la carta que debe ilustrar una revelación de chef. */
+export function chefForActionSplash(
+  state: GameState | null,
+  cue: SoundCue | undefined,
+  playerId: string | undefined,
+): ChefCard | undefined {
+  if (cue !== "chef") return undefined;
+  const chefId = state?.players.find((player) => player.id === playerId)?.chefId;
+  return chefId ? getChef(chefId) : undefined;
+}
+
+export function winnerForActionSplash(
+  state: GameState | null,
+  cue: SoundCue | undefined,
+): { player: PlayerState; chef?: ChefCard; score: number } | undefined {
+  if (cue !== "score" || state?.status !== "finished") return undefined;
+  const player = state.players.find((candidate) => candidate.id === state.winnerId);
+  if (!player) return undefined;
+  return {
+    player,
+    chef: player.chefId ? getChef(player.chefId) : undefined,
+    score: scoreGame(state).find((score) => score.playerId === player.id)?.total ?? 0,
+  };
+}
 export function ActionSplash() {
   const feedback = useGameStore((s) => s.feedback);
   const sessionId = useGameStore((s) => s.sessionId);
+  const state = useGameStore((s) => s.state);
   const [shown, setShown] = useState<{
     id: number;
     message: string;
     cue: SoundCue;
+    playerId?: string;
     targetPlayerId?: string;
   } | null>(null);
 
@@ -46,6 +80,11 @@ export function ActionSplash() {
       ? { icon: "💥", title: "¡Te han dado!", color: "var(--color-brand-tomato)" }
       : SPLASH[shown.cue]
     : undefined;
+  const chef = chefForActionSplash(state, shown?.cue, shown?.playerId);
+  const winnerReveal = winnerForActionSplash(state, shown?.cue);
+  const winner = winnerReveal?.player;
+  const winnerChef = winnerReveal?.chef;
+  const winnerScore = winnerReveal?.score;
 
   return (
     <AnimatePresence>
@@ -87,13 +126,58 @@ export function ActionSplash() {
             animate={{ scale: [0.3, 1.15, 1], rotate: [-12, 4, 0] }}
             transition={{ duration: 0.45, ease: "easeOut" }}
           >
-            <span className="text-7xl drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">{art.icon}</span>
-            <span className="font-display text-4xl text-outline" style={{ color: art.color }}>
-              {art.title}
-            </span>
-            <span className="max-w-[80vw] text-center font-display text-sm text-brand-bechamel">
-              {shown.message}
-            </span>
+            {winner ? (
+              <>
+                <span className="text-6xl drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">🏆</span>
+                <span className="font-display text-4xl text-outline text-brand-cheese">
+                  ¡Victoria!
+                </span>
+                {winnerChef ? (
+                  <img
+                    src={cardImageSrc(winnerChef)}
+                    alt={`Chef ${winnerChef.name}`}
+                    className="h-40 w-28 object-contain drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]"
+                  />
+                ) : (
+                  <span className="text-7xl" aria-hidden="true">
+                    👨‍🍳
+                  </span>
+                )}
+                <span className="font-display text-2xl text-brand-bechamel">{winner.name}</span>
+                {winnerChef && (
+                  <span className="text-sm text-brand-cheese">Chef {winnerChef.name}</span>
+                )}
+                {winnerScore !== undefined && (
+                  <span className="font-display text-lg text-brand-bechamel">
+                    {winnerScore} puntos
+                  </span>
+                )}
+              </>
+            ) : chef ? (
+              <>
+                <img
+                  src={cardImageSrc(chef)}
+                  alt={chef.name}
+                  className="h-40 w-28 object-contain drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]"
+                />
+                <span className="font-display text-4xl text-outline text-brand-basil">
+                  ¡{chef.name}!
+                </span>
+                <span className="max-w-[80vw] text-center font-display text-sm text-brand-bechamel">
+                  {chef.description}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-7xl drop-shadow-[0_6px_0_rgba(0,0,0,0.5)]">{art.icon}</span>
+                <span className="font-display text-4xl text-outline" style={{ color: art.color }}>
+                  {art.title}
+                </span>
+                <span className="max-w-[80vw] text-center font-display text-sm text-brand-bechamel">
+                  {shown.message}
+                </span>
+              </>
+            )}
             <span className="mt-2 text-xs text-brand-bechamel/70">Toca para continuar</span>
           </motion.div>
         </motion.div>

@@ -28,10 +28,6 @@ export interface AudioSettings {
 let context: AudioContext | null = null;
 let settings: AudioSettings = { musicVolume: 0.4, fxVolume: 0.8, muted: false, haptics: true };
 let musicTimer: number | null = null;
-let musicAudioEl: HTMLAudioElement | null = null;
-
-/** Ruta de la pista de música personalizada; si no existe, se usa el tema sintetizado. */
-const CUSTOM_TRACK_URL = "/assets/music/theme.mp3";
 
 function getContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
@@ -43,13 +39,9 @@ function getContext(): AudioContext | null {
 /** Sincroniza el motor de audio con las preferencias guardadas del jugador. */
 export function applyAudioSettings(next: AudioSettings): void {
   settings = next;
-  if (musicAudioEl) {
-    musicAudioEl.volume = settings.musicVolume;
-    musicAudioEl.muted = settings.muted;
-  }
   if (settings.muted || settings.musicVolume <= 0) {
-    if (!musicAudioEl) stopMusic();
-  } else if (musicTimer !== null && !musicAudioEl) {
+    stopMusic();
+  } else if (musicTimer !== null) {
     startMusic();
   }
 }
@@ -64,72 +56,50 @@ interface BackgroundMusicPhrase {
   bass: readonly (number | null)[];
   melody: readonly (number | null)[];
   chords: readonly (readonly number[])[];
-  cymbalAccents: readonly number[];
+  percussionAccents: readonly number[];
 }
 
 /**
- * Frases de 16 corcheas para que el tema tenga estrofas, respuesta y puente,
- * en vez de repetir el mismo compás. Los silencios dejan respirar la melodía.
+ * Tema original de trattoria en re menor: cuatro frases con melodía de acordeón,
+ * bajo de vals y silencios para que la partida conserve protagonismo.
  */
 export const BACKGROUND_MUSIC_PHRASES: readonly BackgroundMusicPhrase[] = [
   {
-    bass: [130.81, 130.81, 164.81, 196, 130.81, null, 164.81, 196, 174.61, 174.61, 220, 196, 146.83, null, 196, 146.83],
-    melody: [523.25, 587.33, 659.25, null, 587.33, 698.46, 659.25, null, 783.99, 698.46, 659.25, 587.33, 523.25, null, 587.33, 523.25],
-    chords: [[261.63, 329.63, 392], [246.94, 293.66, 369.99], [220, 261.63, 329.63], [174.61, 261.63, 349.23]],
-    cymbalAccents: [2, 6, 10, 14],
+    bass: [146.83, null, 146.83, 110, null, 110, 98, null, 98, 110, null, 110, 146.83, null, 146.83, 110],
+    melody: [587.33, 698.46, 880, null, 880, 783.99, 698.46, null, 659.25, 698.46, 783.99, null, 587.33, 659.25, 698.46, null],
+    chords: [[293.66, 349.23, 440], [196, 233.08, 293.66], [220, 277.18, 329.63], [174.61, 220, 261.63]],
+    percussionAccents: [2, 5, 8, 11, 14],
   },
   {
-    bass: [130.81, null, 196, 164.81, 220, 220, 196, null, 174.61, 174.61, 146.83, 196, 130.81, 130.81, 196, null],
-    melody: [659.25, 783.99, 880, 783.99, 659.25, null, 587.33, 659.25, 698.46, 783.99, 698.46, null, 659.25, 587.33, 523.25, 659.25],
-    chords: [[261.63, 329.63, 392], [220, 261.63, 329.63], [174.61, 261.63, 349.23], [196, 246.94, 293.66]],
-    cymbalAccents: [2, 7, 10, 15],
+    bass: [110, null, 110, 146.83, null, 146.83, 130.81, null, 130.81, 110, null, 110, 98, null, 98, 110],
+    melody: [783.99, 880, 1046.5, 880, 783.99, null, 698.46, 783.99, 880, null, 783.99, 698.46, 659.25, 587.33, 659.25, null],
+    chords: [[220, 277.18, 329.63], [293.66, 349.23, 440], [261.63, 329.63, 392], [196, 233.08, 293.66]],
+    percussionAccents: [1, 5, 7, 11, 13],
   },
   {
-    bass: [174.61, 174.61, 220, 261.63, 196, null, 246.94, 293.66, 130.81, 130.81, 164.81, 196, 146.83, 174.61, 196, null],
-    melody: [698.46, 783.99, 880, null, 987.77, 880, 783.99, 698.46, 659.25, null, 587.33, 659.25, 698.46, 659.25, 587.33, 523.25],
-    chords: [[174.61, 261.63, 349.23], [196, 246.94, 293.66], [261.63, 329.63, 392], [146.83, 220, 293.66]],
-    cymbalAccents: [3, 6, 11, 14],
+    bass: [146.83, null, 146.83, 130.81, null, 130.81, 110, null, 110, 98, null, 98, 110, null, 110, 146.83],
+    melody: [698.46, 783.99, 880, null, 1046.5, 987.77, 880, 783.99, 698.46, null, 783.99, 880, 987.77, null, 880, 783.99],
+    chords: [[293.66, 349.23, 440], [261.63, 329.63, 392], [220, 277.18, 329.63], [196, 233.08, 293.66]],
+    percussionAccents: [2, 4, 8, 10, 14],
   },
   {
-    bass: [220, null, 261.63, 220, 146.83, 146.83, 174.61, 220, 196, null, 246.94, 293.66, 130.81, 196, 164.81, 130.81],
-    melody: [880, 783.99, 698.46, null, 783.99, 880, 987.77, 880, 783.99, 698.46, 659.25, null, 587.33, 659.25, 698.46, 783.99],
-    chords: [[220, 261.63, 329.63], [146.83, 220, 293.66], [196, 246.94, 293.66], [261.63, 329.63, 392]],
-    cymbalAccents: [2, 5, 10, 13],
+    bass: [98, null, 98, 110, null, 110, 146.83, null, 146.83, 110, null, 110, 146.83, null, 146.83, null],
+    melody: [783.99, 698.46, 659.25, null, 698.46, 783.99, 880, 783.99, 698.46, null, 659.25, 587.33, 587.33, 659.25, 698.46, 587.33],
+    chords: [[196, 233.08, 293.66], [220, 277.18, 329.63], [293.66, 349.23, 440], [293.66, 349.23, 440]],
+    percussionAccents: [1, 4, 7, 10, 13],
   },
 ];
 
 const PHRASE_ORDER = [0, 1, 0, 2, 0, 1, 3, 2] as const;
 
-/** Intenta reproducir una pista propia; si no existe, activa el tema sintetizado. */
+/** Inicia el tema original de trattoria tras una interacción del jugador. */
 export function startMusic(): void {
   stopMusic();
   if (settings.muted || settings.musicVolume <= 0) return;
-  if (startCustomTrack()) return;
   startSynthMusic();
 }
 
-function startCustomTrack(): boolean {
-  if (typeof Audio === "undefined") return false;
-  const audio = new Audio(CUSTOM_TRACK_URL);
-  audio.loop = true;
-  audio.volume = settings.musicVolume;
-  audio.addEventListener(
-    "error",
-    () => {
-      if (musicAudioEl !== audio) return;
-      musicAudioEl = null;
-      startSynthMusic();
-    },
-    { once: true },
-  );
-  audio.play().catch(() => {
-    // Reproducción automática bloqueada; se reintentará en la próxima interacción.
-  });
-  musicAudioEl = audio;
-  return true;
-}
-
-/** Tema animado de swing sintetizado, con una estructura AABA ampliada. */
+/** Vals ligero de acordeón, guitarra y pandereta, generado con Web Audio. */
 function startSynthMusic(): void {
   let step = 0;
   const tick = () => {
@@ -144,22 +114,22 @@ function startSynthMusic(): void {
     const melody = phrase.melody[phraseStep]!;
 
     if (bass !== null) {
-      tone(audio, bass, now, 0.3 * swing, 0.047 * settings.musicVolume, "square");
+      tone(audio, bass, now, 0.34 * swing, 0.05 * settings.musicVolume, "triangle");
     }
     if (melody !== null) {
-      tone(audio, melody, now + 0.025, 0.24 * swing, 0.042 * settings.musicVolume, "triangle");
+      accordionTone(audio, melody, now + 0.02, 0.28 * swing, 0.036 * settings.musicVolume);
     }
     if (phraseStep % 4 === 0) {
       const chord = phrase.chords[phraseStep / 4]!;
       for (const note of chord) {
-        tone(audio, note, now + 0.01, 0.5, 0.012 * settings.musicVolume, "sine");
+        tone(audio, note, now + 0.01, 0.38, 0.011 * settings.musicVolume, "triangle");
       }
     }
     if (phraseStep === 0 || phraseStep === 8) {
-      tone(audio, 73.42, now, 0.12, 0.025 * settings.musicVolume, "sine");
+      tone(audio, 74, now, 0.08, 0.018 * settings.musicVolume, "sine");
     }
-    if (phrase.cymbalAccents.includes(phraseStep)) {
-      tone(audio, 2200, now, 0.04, 0.016 * settings.musicVolume, "square");
+    if (phrase.percussionAccents.includes(phraseStep)) {
+      tone(audio, 2600, now, 0.035, 0.012 * settings.musicVolume, "square");
     }
     step += 1;
   };
@@ -168,13 +138,21 @@ function startSynthMusic(): void {
 }
 
 export function stopMusic(): void {
-  if (musicAudioEl) {
-    musicAudioEl.pause();
-    musicAudioEl = null;
-  }
   if (musicTimer === null) return;
   window.clearInterval(musicTimer);
   musicTimer = null;
+}
+
+function accordionTone(
+  audio: AudioContext,
+  frequency: number,
+  start: number,
+  duration: number,
+  volume: number,
+) {
+  tone(audio, frequency, start, duration, volume * 0.42, "sawtooth", -7);
+  tone(audio, frequency, start, duration, volume * 0.42, "sawtooth", 7);
+  tone(audio, frequency, start, duration, volume * 0.24, "triangle");
 }
 
 function tone(
@@ -184,11 +162,13 @@ function tone(
   duration: number,
   volume: number,
   type: OscillatorType = "triangle",
+  detune = 0,
 ) {
   const oscillator = audio.createOscillator();
   const gain = audio.createGain();
   oscillator.type = type;
   oscillator.frequency.setValueAtTime(frequency, start);
+  oscillator.detune.setValueAtTime(detune, start);
   gain.gain.setValueAtTime(0.0001, start);
   gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);

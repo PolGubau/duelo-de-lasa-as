@@ -11,7 +11,13 @@ import {
 import { playSound, vibrate, type SoundCue } from "../lib/sound.ts";
 import { useSettingsStore } from "./settingsStore.ts";
 
-type Feedback = { id: number; message: string; cue: SoundCue; targetPlayerId?: string };
+type Feedback = {
+  id: number;
+  message: string;
+  cue: SoundCue;
+  playerId?: string;
+  targetPlayerId?: string;
+};
 
 interface GameStore {
   state: GameState | null;
@@ -75,11 +81,16 @@ function cueFor(kind: string): SoundCue {
 }
 
 export const useGameStore = create<GameStore>((set, get) => {
-  function announce(message: string, cue: SoundCue, targetPlayerId?: string): void {
+  function announce(
+    message: string,
+    cue: SoundCue,
+    playerId?: string,
+    targetPlayerId?: string,
+  ): void {
     const id = ++feedbackId;
     playSound(cue);
     if (cue === "attack") vibrate([18, 40, 24]);
-    set({ feedback: { id, message, cue, targetPlayerId } });
+    set({ feedback: { id, message, cue, playerId, targetPlayerId } });
     window.setTimeout(() => {
       if (get().feedback?.id === id) set({ feedback: null });
     }, 3200);
@@ -174,7 +185,12 @@ export const useGameStore = create<GameStore>((set, get) => {
           room: get().room ? { ...get().room!, status: "playing" } : get().room,
         });
         if (message.event)
-          announce(message.event.message, cueFor(message.event.kind), message.event.targetPlayerId);
+          announce(
+            message.event.message,
+            cueFor(message.event.kind),
+            message.event.playerId,
+            message.event.targetPlayerId,
+          );
       } else if (message.type === "rejected") {
         set({ error: message.reason, pendingVisibility: null });
         notifyError(message.reason);
