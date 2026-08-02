@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { isRoomCode, roomPath, routeFromLocation } from "./routes.ts";
+import { isRoomCode, roomPath, roomUrl, routeFromLocation } from "./routes.ts";
 
 describe("rutas de la aplicación", () => {
   test("normaliza el código de una sala en su ruta canónica", () => {
@@ -9,6 +9,7 @@ describe("rutas de la aplicación", () => {
       legacy: false,
     });
     expect(roomPath("a2bz")).toBe("/sala/A2BZ");
+    expect(roomUrl("a2bz")).toBe("https://app.lasana.polgubau.com/sala/A2BZ");
   });
 
   test("redirige invitaciones antiguas y rechaza códigos inválidos", () => {

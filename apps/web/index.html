@@ -1,135 +1,157 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1d3557" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <title>Duelo de Lasañas</title>
-    <style>
-      #boot-splash {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: grid;
-        place-items: center;
-        overflow: hidden;
-        background: #1d3557;
-        transition:
-          opacity 360ms ease,
-          visibility 360ms ease;
-      }
-      #boot-splash::before {
-        content: "";
-        position: absolute;
-        inset: -35%;
-        background: repeating-conic-gradient(
-          from 0deg,
-          rgba(255, 255, 255, 0.16) 0deg 8deg,
-          transparent 8deg 20deg
-        );
-        animation: boot-splash-spin 3.2s linear infinite;
-      }
-      #boot-splash::after {
-        content: "";
-        position: absolute;
-        width: min(90vw, 34rem);
-        aspect-ratio: 1;
-        border-radius: 999px;
-        background: radial-gradient(circle, rgba(255, 183, 3, 0.45), transparent 68%);
-      }
-      #boot-splash img {
-        position: relative;
-        z-index: 1;
-        width: min(82vw, 24rem);
-        max-height: 64vh;
-        object-fit: contain;
-        filter: drop-shadow(0 14px 0 rgba(74, 40, 16, 0.7));
-        animation: boot-splash-pop 900ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-      }
-      #boot-splash .boot-splash-copy {
-        position: absolute;
-        z-index: 2;
-        bottom: 12vh;
-        color: rgba(248, 249, 250, 0.84);
-        font:
-          600 0.9rem/1.4 system-ui,
-          sans-serif;
-        text-align: center;
-      }
-      #boot-splash .boot-splash-dots::after {
-        content: "";
-        display: inline-block;
-        width: 1.2em;
-        text-align: left;
-        animation: boot-splash-dots 1.2s steps(4, end) infinite;
-      }
-      #boot-splash.boot-splash-hidden {
-        opacity: 0;
-        visibility: hidden;
-        pointer-events: none;
-      }
-      @keyframes boot-splash-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @keyframes boot-splash-dots {
-        0% {
-          content: "";
-        }
-        25% {
-          content: ".";
-        }
-        50% {
-          content: "..";
-        }
-        75%,
-        100% {
-          content: "...";
-        }
-      }
-      @keyframes boot-splash-pop {
-        0% {
-          opacity: 0;
-          transform: translateY(1.5rem) scale(0.72) rotate(-4deg);
-        }
-        65% {
-          opacity: 1;
-          transform: translateY(-0.35rem) scale(1.04) rotate(1deg);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0) scale(1) rotate(0deg);
-        }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        #boot-splash::before,
-        #boot-splash img {
-          animation: none;
-        }
-      }
-    </style>
-  </head>
 
-  <body>
-    <div id="boot-splash" aria-label="Cargando Duelo de Lasañas">
-      <img src="/assets/ui/logo_duelo_lasanas_splash.png" alt="Duelo de Lasañas" />
-      <p class="boot-splash-copy">
-        Precalentando el horno<span class="boot-splash-dots" aria-hidden="true"></span>
-      </p>
-    </div>
-    <div id="app"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1d3557" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="canonical" href="https://app.lasana.polgubau.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:site_name" content="Duelo de Lasañas" />
+  <meta property="og:title" content="Duelo de Lasañas" />
+  <meta property="og:description" content="Construye la capa perfecta, sabotea a tus amigos y gana el duelo." />
+  <meta property="og:url" content="https://app.lasana.polgubau.com/" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <title>Duelo de Lasañas</title>
+  <style>
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #1d3557;
+      transition:
+        opacity 360ms ease,
+        visibility 360ms ease;
+    }
+
+    #boot-splash::before {
+      content: "";
+      position: absolute;
+      inset: -35%;
+      background: repeating-conic-gradient(from 0deg,
+          rgba(255, 255, 255, 0.16) 0deg 8deg,
+          transparent 8deg 20deg);
+      animation: boot-splash-spin 3.2s linear infinite;
+    }
+
+    #boot-splash::after {
+      content: "";
+      position: absolute;
+      width: min(90vw, 34rem);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255, 183, 3, 0.45), transparent 68%);
+    }
+
+    #boot-splash img {
+      position: relative;
+      z-index: 1;
+      width: min(82vw, 24rem);
+      max-height: 64vh;
+      object-fit: contain;
+      filter: drop-shadow(0 14px 0 rgba(74, 40, 16, 0.7));
+      animation: boot-splash-pop 900ms cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+
+    #boot-splash .boot-splash-copy {
+      position: absolute;
+      z-index: 2;
+      bottom: 12vh;
+      color: rgba(248, 249, 250, 0.84);
+      font:
+        600 0.9rem/1.4 system-ui,
+        sans-serif;
+      text-align: center;
+    }
+
+    #boot-splash .boot-splash-dots::after {
+      content: "";
+      display: inline-block;
+      width: 1.2em;
+      text-align: left;
+      animation: boot-splash-dots 1.2s steps(4, end) infinite;
+    }
+
+    #boot-splash.boot-splash-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    @keyframes boot-splash-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes boot-splash-dots {
+      0% {
+        content: "";
+      }
+
+      25% {
+        content: ".";
+      }
+
+      50% {
+        content: "..";
+      }
+
+      75%,
+      100% {
+        content: "...";
+      }
+    }
+
+    @keyframes boot-splash-pop {
+      0% {
+        opacity: 0;
+        transform: translateY(1.5rem) scale(0.72) rotate(-4deg);
+      }
+
+      65% {
+        opacity: 1;
+        transform: translateY(-0.35rem) scale(1.04) rotate(1deg);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotate(0deg);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      #boot-splash::before,
+      #boot-splash img {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="boot-splash" aria-label="Cargando Duelo de Lasañas">
+    <img src="/assets/ui/logo_duelo_lasanas_splash.png" alt="Duelo de Lasañas" />
+    <p class="boot-splash-copy">
+      Precalentando el horno<span class="boot-splash-dots" aria-hidden="true"></span>
+    </p>
+  </div>
+  <div id="app"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

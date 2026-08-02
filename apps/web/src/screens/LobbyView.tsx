@@ -19,7 +19,7 @@ import { ConnectionBanner } from "../components/ConnectionBanner.tsx";
 import { FeedbackToast } from "../components/FeedbackToast.tsx";
 import { Modal } from "../components/Modal.tsx";
 import { cn } from "../lib/cn.ts";
-import { roomPath } from "../lib/routes.ts";
+import { roomUrl } from "../lib/routes.ts";
 import { playSound, vibrate } from "../lib/sound.ts";
 import { useGameStore } from "../store/gameStore.ts";
 
@@ -45,7 +45,7 @@ export function LobbyView({ onExit }: LobbyViewProps) {
   const isHost = room.hostId === sessionId;
   const canStart =
     isHost && room.players.length >= 2 && room.players.every((player) => player.ready);
-  const inviteUrl = `${window.location.origin}${roomPath(room.code)}`;
+  const inviteUrl = roomUrl(room.code);
 
   function showCopyStatus(status: Exclude<CopyStatus, null>): void {
     setCopyStatus(status);

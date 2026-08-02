@@ -7,6 +7,7 @@ export type AppRoute =
   | { kind: "notFound" };
 
 const ROOM_CODE = /^[A-Z0-9]{4}$/;
+export const APP_ORIGIN = "https://app.lasana.polgubau.com";
 
 export function isRoomCode(code: string): boolean {
   return ROOM_CODE.test(code);
@@ -14,6 +15,10 @@ export function isRoomCode(code: string): boolean {
 
 export function roomPath(code: string): string {
   return `/sala/${code.toUpperCase()}`;
+}
+
+export function roomUrl(code: string): string {
+  return new URL(roomPath(code), APP_ORIGIN).toString();
 }
 
 export function routeFromLocation(pathname: string, search: string): AppRoute {

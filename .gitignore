@@ -28,3 +28,6 @@ Thumbs.db
 
 # Vite+
 .vite-plus/
+
+.vercel
+.env*
